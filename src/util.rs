@@ -14,16 +14,13 @@ pub(crate) fn duration_from_f64(interval: f64) -> Option<Duration> {
 }
 
 pub(crate) fn process_wait_params(interval: f64, params: WaitParameters) -> f64 {
-    match params.jitter {
-        Some(n) => {
-            let jitter_seconds = Uniform::new_inclusive(-n, n).sample(&mut rand::thread_rng());
-
-            (interval + jitter_seconds)
-                .max(params.wait_min.unwrap_or(0.0))
-                .min(params.wait_max.unwrap_or(f64::MAX))
-        }
-        None => interval,
-    }
+    let jitter_seconds = match params.jitter {
+        Some(n) => Uniform::new_inclusive(-n, n).sample(&mut rand::thread_rng()),
+        None => 0.0,
+    };
+    (interval + jitter_seconds)
+        .max(params.wait_min.unwrap_or(0.0))
+        .min(params.wait_max.unwrap_or(f64::MAX))
 }
 
 pub(crate) fn create_duration(interval: f64, wait_params: WaitParameters) -> Duration {
