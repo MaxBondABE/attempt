@@ -6,7 +6,7 @@ on:
 jobs:
   unit-test:
     name: Unit Tests
-    runs-on: ubunut-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
         uses: actions/checkout@v2
