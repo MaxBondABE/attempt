@@ -9,15 +9,13 @@ use clap::Parser;
 fn main() -> Result<(), io::Error> {
     let args = ArgumentParser::parse();
     let mut command = args.strategy.command();
-    let mut success = false;
     for duration in args.strategy {
         if command.status()?.success() {
-            success = true;
-            break;
+            std::process::exit(0);
         } else {
             thread::sleep(duration);
         }
     }
 
-    std::process::exit(!success as i32);
+    std::process::exit(1);
 }
