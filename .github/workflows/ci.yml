@@ -1,0 +1,23 @@
+name: CI
+
+on:
+  push: {}
+
+jobs:
+  unit-test:
+    name: Unit Tests
+    runs-on: ubunut-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          default: true
+
+      - name: Run Unit Tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
