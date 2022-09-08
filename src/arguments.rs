@@ -7,11 +7,12 @@ use crate::util::create_duration;
 #[derive(Parser, Debug)]
 pub(crate) struct ArgumentParser {
     #[clap(subcommand)]
-    pub strategy: RetryStrategy,
+    pub backoff: BackoffStrategy,
 }
 
 #[derive(Args, Debug)]
 pub(crate) struct CommonArguments {
+    /// The maximum number of attempts.
     #[clap(long, short, default_value("3"))]
     pub attempts: usize,
     #[clap(flatten)]
@@ -21,17 +22,22 @@ pub(crate) struct CommonArguments {
 
 #[derive(Args, Debug, Clone, Copy)]
 pub(crate) struct WaitParameters {
+    /// Add random jitter to the wait time, in the interval [-n, n].
     #[clap(long, short)]
     pub jitter: Option<f64>,
+    /// The minimum amount of time to wait between attempts.
     #[clap(long)]
     pub wait_min: Option<f64>,
+    /// The maximum amount of time to wait between attempts.
     #[clap(long)]
     pub wait_max: Option<f64>,
 }
 
 #[derive(Subcommand, Debug)]
-pub(crate) enum RetryStrategy {
-    Interval {
+pub(crate) enum BackoffStrategy {
+    /// Wait a fixed amount of time between attempts.
+    Fixed {
+        /// The amount of time to wait between attempts.
         #[clap(long, short, default_value("5.0"))]
         wait: f64,
 
@@ -39,6 +45,7 @@ pub(crate) enum RetryStrategy {
         common: CommonArguments,
     },
 
+    /// Wait exponentially longer between attempts.
     Exponential {
         #[clap(long, short, default_value("2.0"))]
         base: f64,
@@ -49,11 +56,11 @@ pub(crate) enum RetryStrategy {
         common: CommonArguments,
     },
 }
-impl RetryStrategy {
+impl BackoffStrategy {
     pub fn command(&self) -> Command {
         let command = match self {
-            RetryStrategy::Interval { common, .. } => &common.command,
-            RetryStrategy::Exponential { common, .. } => &common.command,
+            BackoffStrategy::Fixed { common, .. } => &common.command,
+            BackoffStrategy::Exponential { common, .. } => &common.command,
         };
         let mut c = Command::new(&command[0]);
         c.args(&command[1..]);
@@ -61,16 +68,16 @@ impl RetryStrategy {
         c
     }
 }
-impl IntoIterator for RetryStrategy {
+impl IntoIterator for BackoffStrategy {
     type Item = Duration;
     type IntoIter = Box<dyn Iterator<Item = Duration>>;
 
     fn into_iter(self) -> Self::IntoIter {
         match self {
-            RetryStrategy::Interval { wait, common } => Box::new(
+            BackoffStrategy::Fixed { wait, common } => Box::new(
                 (0..common.attempts).map(move |_| create_duration(wait, common.wait_params)),
             ),
-            RetryStrategy::Exponential {
+            BackoffStrategy::Exponential {
                 base,
                 multiplier,
                 common,

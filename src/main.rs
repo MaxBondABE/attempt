@@ -8,8 +8,8 @@ use clap::Parser;
 
 fn main() -> Result<(), io::Error> {
     let args = ArgumentParser::parse();
-    let mut command = args.strategy.command();
-    for duration in args.strategy {
+    let mut command = args.backoff.command();
+    for duration in args.backoff {
         if command.status()?.success() {
             std::process::exit(0);
         } else {
