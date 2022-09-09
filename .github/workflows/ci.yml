@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push: {}
+
+jobs:
+  testing:
+    name: Unit, Linting, and Format Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v2
+
+      - name: Install Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+          default: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+
+      - name: Unit Tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+      - name: Linting Tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: --all -- -D warnings
+
+      - name: Formatting Tests
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check

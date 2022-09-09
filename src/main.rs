@@ -1,7 +1,7 @@
 mod arguments;
 mod util;
 
-use std::{thread, io};
+use std::{io, thread};
 
 use arguments::ArgumentParser;
 use clap::Parser;
