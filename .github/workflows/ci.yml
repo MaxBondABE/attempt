@@ -4,8 +4,8 @@ on:
   push: {}
 
 jobs:
-  unit-test:
-    name: Unit Tests
+  testing:
+    name: Unit, Linting, and Format Tests
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -18,18 +18,23 @@ jobs:
           components: rustfmt, clippy
           default: true
 
-      - name: Run Unit Tests
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+
+      - name: Unit Tests
         uses: actions-rs/cargo@v1
         with:
           command: test
 
-      - name: Lint
+      - name: Linting Tests
         uses: actions-rs/cargo@v1
         with:
           command: clippy
           args: --all -- -D warnings
 
-      - name: Check Formatting
+      - name: Formatting Tests
         uses: actions-rs/cargo@v1
         with:
           command: fmt
