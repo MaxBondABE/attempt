@@ -239,10 +239,6 @@ This is useful to reduce load on the system. An assumption was made in the desig
 of the timeout feature that most commands exit quickly, so the child is polled fairly
 aggressively. This may adversely impact performance for some use cases.
 
-### `-9 --force-kill`
-
-Use SIGKILL instead of SIGTERM for a job which has timed out (equivalent to `kill -9`).
-
 ### `--stop-if-timeout`
 
 A stop predicate preventing retries in the event of a timeout.
@@ -255,10 +251,14 @@ how. Scripts should use these exit codes and not the log messages exposed by
 for the log messages.
 
 0 - Command was run successfully within the allowed number of retries
+
 1 - I/O error (eg, command not found). An error message will be printed.
+
 2 - Invalid arguments. An error message will be printed.
+
 3 - The number of retries has been exhausted without the command ever succeeding
+
 4 - The number of retries has not been exhausted, but the command is no longer
     retryable because of a "no" predicate
-101 - `attempt` has crashed
 
+101 - `attempt` has crashed
