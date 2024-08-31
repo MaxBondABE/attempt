@@ -58,7 +58,7 @@ pub struct AttemptArguments {
     pub forever: bool,
 
     /// The command to be attempted. Using `--` to disambiguate arguments between `attempt` and
-    /// the child command is recommended.
+    /// the child command is reccomended.
     #[arg(global = true)]
     pub command: Vec<String>,
 }
