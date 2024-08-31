@@ -244,9 +244,9 @@ impl PolicyParameters {
 
 #[cfg(test)]
 mod test {
-    use regex::Regex;
-    use crate::util::status::StatusCodePattern;
     use super::*;
+    use crate::util::status::StatusCodePattern;
+    use regex::Regex;
 
     struct Successful;
     impl OutputShim for Successful {

@@ -6,12 +6,12 @@ use nix::{
     unistd::Pid,
 };
 
-pub mod status;
-pub mod value_parsing;
 pub mod logger;
 pub mod poll;
+pub mod status;
 #[cfg(test)] // dev-dependencies
 pub mod testing;
+pub mod value_parsing;
 
 /// Send SIGKILL to a child process
 pub fn force_kill(child: &Child) -> Result<(), Errno> {
