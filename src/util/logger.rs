@@ -34,7 +34,7 @@ impl Log for Logger {
             if let Some(s) = record.args().as_str() {
                 eprintln!("{}", s);
             } else {
-                eprintln!("{}", record.args().to_string());
+                eprintln!("{}", record.args());
             }
         }
     }

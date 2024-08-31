@@ -27,9 +27,9 @@ enum Outcome {
     RetriesExhausted,
     Stopped,
 }
-impl Into<i32> for Outcome {
-    fn into(self) -> i32 {
-        match self {
+impl From<Outcome> for i32 {
+    fn from(value: Outcome) -> Self {
+        match value {
             Outcome::Success => SUCCESS,
             Outcome::RetriesExhausted => RETRIES_EXHAUSTED,
             Outcome::Stopped => STOPPED,

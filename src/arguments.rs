@@ -333,7 +333,7 @@ impl IntoIterator for BackoffIter {
                     Box::new((0..).map(move |n| {
                         (
                             self.wait_params
-                                .create_duration(multiplier * base.powi(n as i32)),
+                                .create_duration(multiplier * base.powi(n)),
                             false,
                         )
                     }))

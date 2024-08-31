@@ -40,7 +40,7 @@ impl<'a> OutputShim for OutputWrapper<'a> {
 }
 
 impl PolicyParameters {
-    fn evaluate_stop_predicates<'a>(&self, output: impl OutputShim, timed_out: bool) -> bool {
+    fn evaluate_stop_predicates(&self, output: impl OutputShim, timed_out: bool) -> bool {
         trace!("Evaluating stop predicates...");
 
         // Status code & signal control
@@ -112,7 +112,7 @@ impl PolicyParameters {
         false
     }
 
-    fn evaluate_retry_predicates<'a>(&self, output: impl OutputShim, forever: bool) -> bool {
+    fn evaluate_retry_predicates(&self, output: impl OutputShim, forever: bool) -> bool {
         trace!("Evaluating retry predicates...");
 
         if self.retry_always || forever {
@@ -238,7 +238,7 @@ impl PolicyParameters {
         };
 
         debug!("Stop: Stopping by default.");
-        return Ok((false, output.status));
+        Ok((false, output.status))
     }
 }
 
