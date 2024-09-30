@@ -3,6 +3,21 @@ attempt - a CLI for retrying fallible commands
 
 `attempt` allows you to retry fallible commands with a delay.
 
+# How do I use it?
+
+`attempt [STRATEGY] [OPTIONS] [COMMAND]...`
+
+```bash
+# Rerun database migrations if the server was not ready
+attempt --retry-if-contains "server not ready" sqlx migrate
+```
+
+# What can I do with it?
+
+- Wait for a service to start when you aren't [restricted to bash](https://github.com/vishnubob/wait-for-it)
+- Improve the robustness of scripts accessing resources which may become temporarily unavailable
+- Bodge flaky programs into working
+
 ## Key features
 
 - **Simple.**
@@ -15,25 +30,6 @@ attempt - a CLI for retrying fallible commands
 - **Free forever.**
     - The codebase is in the public domain.
     - All future versions will be released under the same license.
-
-# Installation
-
-TBD
-
-# What can I do with it?
-
-- Wait for a service to start when you aren't [restricted to bash](https://github.com/vishnubob/wait-for-it)
-- Improve the robustness of scripts accessing resources which may become temporarily unavailable
-- Bodge flaky programs into working
-
-# How do I use it?
-
-`attempt [STRATEGY] [OPTIONS] [COMMAND]...`
-
-```bash
-# Rerun database migrations if the server was not ready
-attempt --retry-if-contains "server not ready" sqlx migrate
-```
 
 ## Documentation
 
@@ -50,3 +46,8 @@ attempt --retry-if-contains "server not ready" sqlx migrate
     UTF-8, `attempt` will crash.
 - `attempt --help` will show the strategy as coming after the child command.
     This is incorrect, the child command comes last.
+
+# Installation
+
+TBD
+
