@@ -23,7 +23,7 @@ pub struct OutputWrapper<'a> {
     stdout: &'a OnceCell<&'a str>,
     stderr: &'a OnceCell<&'a str>,
 }
-impl<'a> OutputShim for OutputWrapper<'a> {
+impl OutputShim for OutputWrapper<'_> {
     fn status_code(&self) -> Option<i32> {
         self.output.status.code()
     }

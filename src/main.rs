@@ -1,4 +1,4 @@
-#![allow(unused, dead_code)]
+#![deny(clippy::dbg_macro)]
 
 mod arguments;
 mod policy;
@@ -6,12 +6,9 @@ mod util;
 
 use std::{io, process, time::Duration};
 
-use clap::Parser;
 use arguments::{parse_arguments, AttemptArguments};
 use log::{debug, error, trace, warn};
 use util::{logger::Logger, poll::poll_child};
-
-use crate::util::force_kill;
 
 // NB: Must stay in sync with tests/util.rs
 const SUCCESS: i32 = 0;
