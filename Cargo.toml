@@ -7,7 +7,6 @@ edition = "2021"
 anyhow = "1.0.86"
 clap = { version = "4.4.6", features = ["derive"] }
 log = { version = "0.4.22", features = ["std"] }
-nix = { version = "0.27.1", features = ["signal"] }
 rand = "0.8.5"
 rand_distr = "0.4.3"
 regex = "1.9.6"
