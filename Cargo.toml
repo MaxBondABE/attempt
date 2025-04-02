@@ -1,7 +1,13 @@
 [package]
 name = "attempt"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
+license = "Unlicense"
+description = "A CLI for retrying fallible commands"
+homepage = "https://github.com/MaxBondABE/attempt"
+repository = "https://github.com/MaxBondABE/attempt"
+readme = "README.md"
+keywords = ["retry", "retrying"]
 
 [dependencies]
 anyhow = "1.0.86"
