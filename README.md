@@ -10,12 +10,15 @@ attempt - a CLI for retrying fallible commands
 ```bash
 # Rerun database migrations if the server was not ready
 attempt --retry-if-contains "server not ready" sqlx migrate
+
+# Use an exponential backoff
+attempt exponential --retry-if-contains "server not ready" sqlx migrate
 ```
 
 # What can I do with it?
 
 - Wait for a service to start when you aren't [restricted to bash](https://github.com/vishnubob/wait-for-it)
-- Improve the robustness of scripts accessing resources which may become temporarily unavailable
+- Write robust scripts accessing resources which may become temporarily unavailable
 - Bodge flaky programs into working
 
 ## Key features
@@ -34,7 +37,7 @@ attempt --retry-if-contains "server not ready" sqlx migrate
 ## Documentation
 
 - Read the [usage instructions](docs/usage.md) to get a quick start
-- See [here](docs/scripting.md) for advice for using attempt in scripts
+- The [scripting guide](docs/scripting.md) has advice about using attempt in scripts
 - Run `attempt --help` for full documentation
     - Note that you need to specify a strategy to see it's parameters,
         eg `attempt exponential --help`
@@ -44,8 +47,8 @@ attempt --retry-if-contains "server not ready" sqlx migrate
 - `attempt` assumes that the child command's output will be UTF-8 encoded.
     If any output predicates are used on a program that outputs invalid
     UTF-8, `attempt` will crash.
-- `attempt --help` will show the strategy as coming after the child command.
-    This is incorrect, the child command comes last.
+- `attempt --help` will not reflect that the `fixed` strategy will be used if
+    no strategy is specified.
 
 # Installation
 

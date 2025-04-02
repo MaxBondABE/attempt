@@ -1,4 +1,5 @@
 use std::{
+    ffi::OsString,
     io,
     ops::Not,
     process::{Child, Command, ExitStatus},
@@ -14,20 +15,46 @@ use crate::util::{
     value_parsing::{f32_gte_0, usize_gte_1},
 };
 
+/// Hack to get a "default" subcommand to work. See ImplicitSubcommandArguments.
+pub fn parse_arguments() -> AttemptArguments {
+    match AttemptArguments::try_parse() {
+        Ok(args) => args,
+        Err(e) => {
+            if let Ok(args) = ImplicitSubcommandArguments::try_parse() {
+                args.into()
+            } else {
+                e.exit()
+            }
+        }
+    }
+}
+
+#[allow(unused)] // testing utility
+/// Hack to get a "default" subcommand to work. See ImplicitSubcommandArguments.
+pub fn parse_arguments_from<I: IntoIterator<Item = T> + Copy, T: Into<OsString> + Clone>(
+    itr: I,
+) -> AttemptArguments {
+    match AttemptArguments::try_parse_from(itr) {
+        Ok(args) => args,
+        Err(e) => {
+            if let Ok(args) = ImplicitSubcommandArguments::try_parse_from(itr) {
+                args.into()
+            } else {
+                e.exit()
+            }
+        }
+    }
+}
+
 #[derive(Parser, Debug)]
 pub struct AttemptArguments {
     #[command(subcommand)]
-    pub strategy: Option<BackoffStrategy>,
+    pub strategy: BackoffStrategy,
 
     #[command(flatten)]
     pub wait_params: WaitParameters,
     #[command(flatten)]
     pub policy_params: PolicyParameters,
-
-    // Hidden arguments for BackoffStrategy::Fixed (the default strategy).
-    // NB: Duplicates the above; must be kept in sync
-    #[arg(long, short, default_value_t = 1.0, hide = true, value_parser=f32_gte_0, value_name="SECONDS")]
-    wait: f32,
 
     /// The maximum number of attempts.
     #[arg(long, short, default_value_t = 3, global = true, value_parser=usize_gte_1)]
@@ -54,20 +81,15 @@ pub struct AttemptArguments {
     pub unlimited_attempts: bool,
     /// Always retry the command, and do not limit the number of attempts. Useful for restarting
     /// long-running applications.
-    #[arg(long, global = true)]
+    #[arg(long, short = 'Y', global = true)]
     pub forever: bool,
-
-    /// The command to be attempted. Using `--` to disambiguate arguments between `attempt` and
-    /// the child command is recommended.
-    #[arg(global = true)]
-    pub command: Vec<String>,
 }
 
 impl AttemptArguments {
     pub fn validate(&self) {
         // NB: The command here in the `clap` parlance - NOT the command we are
         // retrying.
-        if self.command.is_empty() {
+        if self.strategy.command().is_empty() {
             let mut clap_cmd = AttemptArguments::command();
             clap_cmd
                 .error(ErrorKind::InvalidValue, "No command specified.")
@@ -95,16 +117,15 @@ impl AttemptArguments {
     pub fn backoff(&self) -> BackoffIter {
         let unlimited_attempts = self.unlimited_attempts || self.forever;
         BackoffIter {
-            strategy: self
-                .strategy
-                .unwrap_or(BackoffStrategy::Fixed { wait: self.wait }),
+            params: self.strategy.params(),
             attempts: unlimited_attempts.not().then_some(self.attempts),
             wait_params: self.wait_params,
         }
     }
     pub fn build_command(&self) -> Command {
-        let mut c = Command::new(&self.command[0]);
-        c.args(&self.command[1..]);
+        let command = self.strategy.command();
+        let mut c = Command::new(&command[0]);
+        c.args(&command[1..]);
 
         c
     }
@@ -119,7 +140,82 @@ impl AttemptArguments {
 }
 impl Default for AttemptArguments {
     fn default() -> Self {
-        AttemptArguments::parse_from(["attempt"])
+        AttemptArguments::parse_from(["attempt", "fixed", "--wait", "1"])
+    }
+}
+
+// Hack to get an implicit subcommand to work.
+// - We are abusing the subcommand feature of clap to implement a "mode"
+//  - Rather than branching between different behaviors, we are doing the same
+//    behavior differently.
+// - To implicitly used Fixed if no subcommand is specified, we need to accept
+//  `command` as an argument.
+// - However, subcommands _always_ go last in usage documentation.
+// - Because `command` is a list, it _has_ to go last.
+// - This means clap will output confusing/wrong usage documentation.
+// - Hack: Push `command` down into the subcommands, write _two_ parsers,
+//   and fall back to the implicit behavior if the normal, "explicit" subcommand
+//   fails.
+// NB: We never show help from this parser.
+#[derive(Parser, Debug)]
+pub struct ImplicitSubcommandArguments {
+    #[command(flatten)]
+    pub wait_params: WaitParameters,
+    #[command(flatten)]
+    pub policy_params: PolicyParameters,
+
+    #[arg(long, short, default_value_t = 1.0, value_parser=f32_gte_0, hide = true)]
+    wait: f32,
+
+    #[arg(long, short, default_value_t = 3, global = true, value_parser=usize_gte_1)]
+    pub attempts: usize,
+    #[arg(long, short = 't', global = true, value_parser=f32_gte_0, value_name="SECONDS")]
+    pub timeout: Option<f32>,
+    #[arg(long, short='R', global=true, value_parser=f32_gte_0, value_name="SECONDS")]
+    pub expected_runtime: Option<f32>,
+
+    #[arg(long, short, global = true, action=clap::ArgAction::Count)]
+    pub verbose: u8,
+    #[arg(long, short, global = true, action=clap::ArgAction::Count)]
+    pub quiet: u8,
+
+    #[arg(long, short = 'U', global = true)]
+    pub unlimited_attempts: bool,
+    #[arg(long, short = 'Y', global = true)]
+    pub forever: bool,
+
+    #[arg(global = true)]
+    pub command: Vec<String>,
+}
+impl From<ImplicitSubcommandArguments> for AttemptArguments {
+    fn from(value: ImplicitSubcommandArguments) -> Self {
+        let ImplicitSubcommandArguments {
+            wait_params,
+            policy_params,
+            wait,
+            attempts,
+            timeout,
+            expected_runtime,
+            verbose,
+            quiet,
+            unlimited_attempts,
+            forever,
+            command,
+        } = value;
+        let strategy = BackoffStrategy::Fixed { wait, command };
+
+        Self {
+            strategy,
+            wait_params,
+            policy_params,
+            attempts,
+            timeout,
+            expected_runtime,
+            verbose,
+            quiet,
+            unlimited_attempts,
+            forever,
+        }
     }
 }
 
@@ -158,7 +254,7 @@ pub struct PolicyParameters {
 
     /// Retry if the program exits with this code, or a pattern
     /// consisting of a range of codes (eg `1..5`), a series of codes
-    /// (eg `1,2,3`), or a combination (eg `1..5,10,15-20`).
+    /// (eg `1,2,3`), or a combination (eg `1..5,10,15..20`).
     #[arg(long, short = 'S', value_name = "STATUS_CODE", global = true)]
     pub retry_if_status: Option<StatusCodePattern>,
 
@@ -219,8 +315,7 @@ pub struct PolicyParameters {
     pub stop_if_stderr_matches: Option<Regex>,
 
     /// Stop retrying if the program was killed by a signal. Note that this
-    /// essentially implies --stop-if-timeout, because timed-out commands
-    /// will be killed.
+    /// implies --stop-if-timeout, because timed-out commands will be killed.
     #[arg(long, global = true)]
     pub stop_if_killed: bool,
 
@@ -231,8 +326,7 @@ pub struct PolicyParameters {
 
 impl PolicyParameters {
     pub fn default_behavior(&self) -> bool {
-        // NB: This is not protected by a test, it must be manually verified if
-        // if changed
+        // NB: This is not protected by a test, it must be manually verified if changed
         self.retry_if_status.is_none()
             && self.retry_if_contains.is_none()
             && self.retry_if_matches.is_none()
@@ -254,7 +348,7 @@ impl PolicyParameters {
     }
 }
 
-#[derive(Subcommand, Copy, Clone, Debug)]
+#[derive(Subcommand, Clone, Debug)]
 #[command(
     subcommand_value_name = "STRATEGY",
     subcommand_help_heading = "Backoff Strategies",
@@ -267,6 +361,11 @@ pub enum BackoffStrategy {
         // NB: Keep in sync with duplicate in AttemptArguments
         #[arg(long, short, default_value_t = 1.0, value_parser=f32_gte_0)]
         wait: f32,
+
+        /// The command to be attempted. Using `--` to disambiguate arguments between `attempt` and
+        /// the child command is recommended.
+        #[arg(global = true)]
+        command: Vec<String>,
     },
 
     /// Wait exponentially longer between attempts, using the formula
@@ -277,6 +376,11 @@ pub enum BackoffStrategy {
         base: f32,
         #[arg(long, default_value_t = 1.0, short = 'x', value_parser=f32_gte_0)]
         multiplier: f32,
+
+        /// The command to be attempted. Using `--` to disambiguate arguments between `attempt` and
+        /// the child command is recommended.
+        #[arg(global = true)]
+        command: Vec<String>,
     },
 
     /// Wait linearly longer between attempts, using the formula
@@ -284,20 +388,55 @@ pub enum BackoffStrategy {
     Linear {
         #[arg(long, default_value_t = 1.0, short = 'x', value_parser=f32_gte_0)]
         multiplier: f32,
-        #[arg(long, default_value_t = 1.0, value_parser=f32_gte_0)]
-        // FIXME find non-colliding short name
+        #[arg(long, short='W', default_value_t = 1.0, value_parser=f32_gte_0)]
         starting_wait: f32,
+
+        /// The command to be attempted. Using `--` to disambiguate arguments between `attempt` and
+        /// the child command is recommended.
+        #[arg(global = true)]
+        command: Vec<String>,
     },
 }
-impl Default for BackoffStrategy {
-    fn default() -> Self {
-        Self::Fixed { wait: 1.0 }
+
+impl BackoffStrategy {
+    fn params(&self) -> BackoffParameters {
+        match self {
+            BackoffStrategy::Fixed { wait, .. } => BackoffParameters::Fixed { wait: *wait },
+            BackoffStrategy::Exponential {
+                base, multiplier, ..
+            } => BackoffParameters::Exponential {
+                base: *base,
+                multiplier: *multiplier,
+            },
+            BackoffStrategy::Linear {
+                multiplier,
+                starting_wait,
+                ..
+            } => BackoffParameters::Linear {
+                multiplier: *multiplier,
+                starting_wait: *starting_wait,
+            },
+        }
     }
+    fn command(&self) -> &Vec<String> {
+        match self {
+            BackoffStrategy::Fixed { command, .. } => command,
+            BackoffStrategy::Exponential { command, .. } => command,
+            BackoffStrategy::Linear { command, .. } => command,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug)]
+enum BackoffParameters {
+    Fixed { wait: f32 },
+    Exponential { base: f32, multiplier: f32 },
+    Linear { multiplier: f32, starting_wait: f32 },
 }
 
 #[derive(Copy, Clone, Debug)]
 pub struct BackoffIter {
-    strategy: BackoffStrategy,
+    params: BackoffParameters,
     attempts: Option<usize>,
     wait_params: WaitParameters,
 }
@@ -307,8 +446,8 @@ impl IntoIterator for BackoffIter {
     type IntoIter = Box<dyn Iterator<Item = Self::Item>>;
 
     fn into_iter(self) -> Self::IntoIter {
-        match self.strategy {
-            BackoffStrategy::Fixed { wait } => {
+        match self.params {
+            BackoffParameters::Fixed { wait } => {
                 if let Some(attempts) = self.attempts {
                     let last = attempts - 1;
                     Box::new(
@@ -319,7 +458,7 @@ impl IntoIterator for BackoffIter {
                     Box::new((0..).map(move |_| (self.wait_params.create_duration(wait), false)))
                 }
             }
-            BackoffStrategy::Exponential { base, multiplier } => {
+            BackoffParameters::Exponential { base, multiplier } => {
                 if let Some(attempts) = self.attempts {
                     let last = attempts - 1;
                     Box::new((0..attempts).map(move |n| {
@@ -338,7 +477,7 @@ impl IntoIterator for BackoffIter {
                     }))
                 }
             }
-            BackoffStrategy::Linear {
+            BackoffParameters::Linear {
                 multiplier,
                 starting_wait,
             } => {
@@ -372,7 +511,10 @@ mod test {
     #[test]
     fn fixed() {
         let fixed_args = AttemptArguments {
-            strategy: Some(BackoffStrategy::Fixed { wait: 1.0 }),
+            strategy: BackoffStrategy::Fixed {
+                wait: 1.0,
+                command: vec![],
+            },
             attempts: 3,
             ..Default::default()
         };
@@ -387,7 +529,10 @@ mod test {
     #[test]
     fn fixed_with_jitter() {
         let fixed_args = AttemptArguments {
-            strategy: Some(BackoffStrategy::Fixed { wait: 5.0 }),
+            strategy: BackoffStrategy::Fixed {
+                wait: 5.0,
+                command: vec![],
+            },
             attempts: 3,
             wait_params: WaitParameters {
                 jitter: Some(1.0),
@@ -408,10 +553,11 @@ mod test {
         let multiplier = 2.;
         let starting_wait = 1.;
         let linear_args = AttemptArguments {
-            strategy: Some(BackoffStrategy::Linear {
+            strategy: BackoffStrategy::Linear {
                 multiplier,
                 starting_wait,
-            }),
+                command: vec![],
+            },
             attempts: 3,
             ..Default::default()
         };
@@ -437,10 +583,11 @@ mod test {
     fn exponential() {
         // Test base
         let exp_args = AttemptArguments {
-            strategy: Some(BackoffStrategy::Exponential {
+            strategy: BackoffStrategy::Exponential {
                 base: 2.0,
                 multiplier: 1.0,
-            }),
+                command: vec![],
+            },
             ..Default::default()
         };
 
@@ -456,10 +603,11 @@ mod test {
 
         // Test multiplier
         let exp_args = AttemptArguments {
-            strategy: Some(BackoffStrategy::Exponential {
+            strategy: BackoffStrategy::Exponential {
                 base: 2.0,
                 multiplier: 2.0,
-            }),
+                command: vec![],
+            },
             ..Default::default()
         };
 
@@ -477,10 +625,11 @@ mod test {
     #[test]
     fn exponential_with_jitter() {
         let exp_args = AttemptArguments {
-            strategy: Some(BackoffStrategy::Exponential {
+            strategy: BackoffStrategy::Exponential {
                 base: 2.0,
                 multiplier: 1.0,
-            }),
+                command: vec![],
+            },
             wait_params: WaitParameters {
                 jitter: Some(1.0),
                 ..Default::default()
@@ -501,7 +650,10 @@ mod test {
     #[test]
     fn fixed_is_default() {
         let fixed_args = AttemptArguments {
-            strategy: Some(BackoffStrategy::Fixed { wait: 1.0 }),
+            strategy: BackoffStrategy::Fixed {
+                wait: 1.0,
+                command: vec![],
+            },
             ..Default::default()
         };
         let fixed_durations = fixed_args.backoff().into_iter().collect::<Vec<_>>();

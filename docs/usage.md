@@ -51,8 +51,8 @@ attempt fixed --wait 15 /bin/false
 
 ## Exponential Backoff
 
-Wait exponentially more time between attempts, using the formula <multiplier> * <base> ^ <attempts>. The attempt
-counter starts at 0, so the first wait is is for <multiplier> seconds.
+Wait exponentially more time between attempts, using the formula `<multiplier> * <base> ^ <attempts>`. The attempt
+counter starts at 0, so the first wait is is for `<multiplier>` seconds.
 
 ```bash
 attempt exponential /bin/false
@@ -69,8 +69,8 @@ attempt exponential --base 5 /bin/false
 
 ## Linear Backoff
 
-Wait more time between attempts, using the formula <multiplier> * <attempts> + <starting_wait>. The attempt
-counter starts at 0, so the first wait is is for <starting_wait> seconds.
+Wait more time between attempts, using the formula `<multiplier> * <attempts> + <starting_wait>`. The attempt
+counter starts at 0, so the first wait is is for `<starting_wait>` seconds.
 
 ```bash
 attempt linear /bin/false
@@ -87,9 +87,8 @@ attempt linear --starting-wait 5 /bin/false
 # Predicates
 
 Predicates control the circumstances under which `attempt` will retry the child
-command. Most predicates come with a "retry" and "stop" variant, with the stop
-predicates beginning with `--stop-*`. Retry predicates cause a command to be retried,
-while stop predicates cause `attempt` to terminate.
+command. Most predicates come with a "retry" and "stop" variant. Retry predicates
+cause a command to be retried, while stop predicates cause `attempt` to terminate.
 
 Stop predicates always have precedence over retry predicates.
 
@@ -98,12 +97,9 @@ Stop predicates always have precedence over retry predicates.
 If no retry predicates are specified, `attempt` will retry a command if it's exit code
 isn't equal to 0, or if the command was killed by a [signal](https://en.wikipedia.org/wiki/Signal_(IPC)).
 
-If retry predicates are specified, than `attempt` will not 
-
 ### `--retry-always`
 
-Invert `attempt`'s behavior from not retrying by default to retrying by default. You can then use
-stop
+This predicate will cause `attempt` to always retry a command, unless a stop predicate is triggered.
 
 ## Status Predicates
 
@@ -147,8 +143,7 @@ These predicates could be the cause of performance issues if the child program o
 amount of text or if the regexes are especially complex. Status code predicates should be
 preferred where possible.
 
-See [here](https://docs.rs/regex/latest/regex/#syntax) for documentation of the supported regex
-syntax.
+See the [`regex` crate's documentation](https://docs.rs/regex/latest/regex/#syntax) for supported syntax.
 
 ## Timeout & signal control
 
@@ -159,7 +154,7 @@ Don't retry the command if it is killed by a timeout.
 ### `--stop-if-killed`
 
 Don't retry the command if it is killed be a signal. Because timeouts use
-signals, this essentially implies `--stop-if-timeout`.
+signals, this implies `--stop-if-timeout`.
 
 # Other arguments
 
@@ -208,6 +203,9 @@ Terminated: Retries exhausted.
 
 ### `-j --jitter <SECONDS>`
 
+For a jitter value of `n`, adds a value in the interval `[-n/2, n/2]` to
+the delay time. This is useful for preventing "thundering herd" issues.
+
 ### `-m --wait-min <SECONDS>`
 
 Round any delay smaller than the specified minimum up to that minimum.
@@ -223,7 +221,7 @@ do not sleep for an unbounded amount of time.
 ### `-t --timeout <SECONDS>`
 
 Kill the child command if it does not complete within the timeout. This prevents `attempt`
-from waiting indefinitely on a seccond that may be, for instance, stuck in an infinite
+from waiting indefinitely on a child that may be, for instance, stuck in an infinite
 loop.
 
 The child is polled using an exponential backoff with a base of 2 and a multiplier of 10ms,
@@ -259,6 +257,7 @@ for the log messages.
 3 - The number of retries has been exhausted without the command ever succeeding
 
 4 - The number of retries has not been exhausted, but the command is no longer
-    retryable because of a "no" predicate
+    retryable because of a "stop" predicate.
 
-101 - `attempt` has crashed
+101 - `attempt` has crashed. The most likely cause is using output predicates on
+    data which is not UTF-8 encoded.

@@ -6,8 +6,8 @@ mod util;
 
 use std::{io, process, time::Duration};
 
-use arguments::AttemptArguments;
 use clap::Parser;
+use arguments::{parse_arguments, AttemptArguments};
 use log::{debug, error, trace, warn};
 use util::{logger::Logger, poll::poll_child};
 
@@ -98,7 +98,7 @@ fn attempt(args: AttemptArguments) -> Result<Outcome, io::Error> {
 }
 
 fn main() {
-    let args = AttemptArguments::parse();
+    let args = parse_arguments();
     args.validate();
 
     Logger::new(args.verbose, args.quiet).init().unwrap();
@@ -125,46 +125,47 @@ fn main() {
 #[cfg(test)]
 mod test {
     use super::*;
+    use arguments::parse_arguments_from;
 
     #[test]
     fn happy_path_smoke_test_fixed() {
-        let args = AttemptArguments::parse_from(["attempt", "/bin/true"]);
+        let args = parse_arguments_from(["attempt", "/bin/true"]);
         assert_eq!(attempt(args).ok(), Some(Outcome::Success));
 
-        let args = AttemptArguments::parse_from(["attempt", "fixed", "/bin/true"]);
+        let args = parse_arguments_from(["attempt", "fixed", "/bin/true"]);
         assert_eq!(attempt(args).ok(), Some(Outcome::Success));
     }
 
     #[test]
     fn happy_path_smoke_test_exp() {
-        let args = AttemptArguments::parse_from(["attempt", "exponential", "/bin/true"]);
+        let args = parse_arguments_from(["attempt", "exponential", "/bin/true"]);
         assert_eq!(attempt(args).ok(), Some(Outcome::Success));
     }
 
     #[test]
     fn happy_path_smoke_test_linear() {
-        let args = AttemptArguments::parse_from(["attempt", "linear", "/bin/true"]);
+        let args = parse_arguments_from(["attempt", "linear", "/bin/true"]);
         assert_eq!(attempt(args).ok(), Some(Outcome::Success));
     }
 
     #[test]
     fn sad_path_smoke_test_fixed() {
-        let args = AttemptArguments::parse_from(["attempt", "/bin/false"]);
+        let args = parse_arguments_from(["attempt", "/bin/false"]);
         assert_eq!(attempt(args).ok(), Some(Outcome::RetriesExhausted));
 
-        let args = AttemptArguments::parse_from(["attempt", "fixed", "/bin/false"]);
+        let args = parse_arguments_from(["attempt", "fixed", "/bin/false"]);
         assert_eq!(attempt(args).ok(), Some(Outcome::RetriesExhausted));
     }
 
     #[test]
     fn sad_path_smoke_test_exp() {
-        let args = AttemptArguments::parse_from(["attempt", "exponential", "/bin/false"]);
+        let args = parse_arguments_from(["attempt", "exponential", "/bin/false"]);
         assert_eq!(attempt(args).ok(), Some(Outcome::RetriesExhausted));
     }
 
     #[test]
     fn sad_path_smoke_test_linear() {
-        let args = AttemptArguments::parse_from(["attempt", "linear", "/bin/false"]);
+        let args = parse_arguments_from(["attempt", "linear", "/bin/false"]);
         assert_eq!(attempt(args).ok(), Some(Outcome::RetriesExhausted));
     }
 }
