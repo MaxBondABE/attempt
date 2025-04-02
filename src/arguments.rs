@@ -358,7 +358,7 @@ pub enum BackoffStrategy {
     /// Wait a fixed amount of time between attempts (this is the default).
     Fixed {
         /// The amount of time to wait between attempts.
-        // NB: Keep in sync with duplicate in AttemptArguments
+        // NB: Keep in sync with duplicate in ImplicitSubcommandArguments
         #[arg(long, short, default_value_t = 1.0, value_parser=f32_gte_0)]
         wait: f32,
 
