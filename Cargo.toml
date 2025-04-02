@@ -9,6 +9,10 @@ repository = "https://github.com/MaxBondABE/attempt"
 readme = "README.md"
 keywords = ["retry", "retrying"]
 
+[[bin]]
+name = "attempt"
+path = "src/main.rs"
+
 [dependencies]
 anyhow = "1.0.86"
 clap = { version = "4.4.6", features = ["derive"] }
