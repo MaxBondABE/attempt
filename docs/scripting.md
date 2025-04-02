@@ -16,9 +16,10 @@ for the log messages.
 3 - The number of retries has been exhausted without the command ever succeeding
 
 4 - The number of retries has not been exhausted, but the command is no longer
-    retryable because of a "no" predicate
+    retryable because of a "stop" predicate.
 
-101 - `attempt` has crashed
+101 - `attempt` has crashed. The most likely cause is using output predicates on
+    data which is not UTF-8 encoded.
 
 ## Best practices
 
@@ -46,6 +47,8 @@ multiple systems concurrently, or if you are accessing a public resource and man
 constants for their retry logic (eg, if everyone chooses round numbers, then they all will be multiples
 of 5, and at some point everyone's retry logic will sync up and make a request at the exact same time).
 A useful metaphor is [metronome synchronization](https://www.youtube.com/watch?v=T58lGKREubo).
+
+See also the [thundering herd problem](https://en.wikipedia.org/wiki/Thundering_herd_problem).
 
 ### Avoid output predicates
 
