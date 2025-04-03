@@ -658,7 +658,7 @@ mod test {
         };
         let fixed_durations = fixed_args.backoff().into_iter().collect::<Vec<_>>();
 
-        let default_args = AttemptArguments::default();
+        let default_args = parse_arguments_from(["/bin/true"]);
         let default_durations = default_args.backoff().into_iter().collect::<Vec<_>>();
 
         assert_eq!(fixed_durations, default_durations);
