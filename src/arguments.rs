@@ -17,6 +17,10 @@ use crate::util::{
 
 /// Hack to get a "default" subcommand to work. See ImplicitSubcommandArguments.
 pub fn parse_arguments() -> AttemptArguments {
+    // NB: Both parse_arguments functions MUST be kept in sync.
+    // This is NOT protected by a test. If you change this function,
+    // you must ensure this manually. Otherwise, unit tests cannot be
+    // relied upon.
     match AttemptArguments::try_parse() {
         Ok(args) => args,
         Err(e) => {
@@ -34,6 +38,10 @@ pub fn parse_arguments() -> AttemptArguments {
 pub fn parse_arguments_from<I: IntoIterator<Item = T> + Copy, T: Into<OsString> + Clone>(
     itr: I,
 ) -> AttemptArguments {
+    // NB: Both parse_arguments functions MUST be kept in sync.
+    // This is NOT protected by a test. If you change this function,
+    // you must ensure this manually. Otherwise, unit tests cannot be
+    // relied upon.
     match AttemptArguments::try_parse_from(itr) {
         Ok(args) => args,
         Err(e) => {
