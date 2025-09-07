@@ -46,7 +46,7 @@ pub fn time_duration(s: &str) -> Result<f32, anyhow::Error> {
         let (unit, r) = remaining.split_at(unit_idx);
         remaining = r.trim_start();
 
-        if unit == "" {
+        if unit.is_empty() {
             return Err(ValueError::InconsistentUnits.into());
         }
 

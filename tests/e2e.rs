@@ -298,7 +298,6 @@ pub fn assert_percent_error(measured: f32, expected: f32, threshold: f32) {
     }
 }
 
-
 pub fn assert_average_percent_error<F: Fn() -> f32>(func: F, expected: f32, threshold: f32) {
     let mut samples: [f32; 5] = Default::default();
     for (i, v) in [func(), func(), func(), func(), func()]

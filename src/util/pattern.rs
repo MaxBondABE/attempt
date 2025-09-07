@@ -2,7 +2,6 @@ use std::{
     fmt::{Debug, Display},
     ops::RangeInclusive,
     str::FromStr,
-    u8,
 };
 
 use log::debug;
