@@ -204,3 +204,75 @@ fn staggering() {
 
         start.elapsed().as_secs_f32()
     }
+
+    fn without_stagger() -> f32 {
+        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        cmd.arg("/bin/true");
+
+        cmd.timeout(TEST_TIMEOUT);
+        let start = Instant::now();
+        cmd.assert().success();
+
+        start.elapsed().as_secs_f32()
+    }
+
+    fn timing_difference(i: usize) -> f32 {
+        // By taking both measurements concurrently, we negate errors caused by
+        // varying load on the system over the course of a test
+        if (i & 1) == 0 {
+            let with = thread::spawn(with_stagger);
+            let without = thread::spawn(without_stagger);
+            with.join().unwrap() - without.join().unwrap()
+        } else {
+            let without = thread::spawn(without_stagger);
+            let with = thread::spawn(with_stagger);
+            with.join().unwrap() - without.join().unwrap()
+        }
+    }
+
+    fn sample_timing_difference(n: usize) -> f32 {
+        let mut samples: Vec<JoinHandle<f32>> = Vec::with_capacity(n);
+        for i in 0..n {
+            if i > 0 {
+                thread::sleep(Duration::from_millis(10))
+            }
+            samples.push(thread::spawn(move || timing_difference(i)));
+        }
+        let total: f32 = samples.drain(..).map(|handle| handle.join().unwrap()).sum();
+        total / n as f32
+    }
+
+    // - The timing difference should be a function of STAGGER
+    // - Because the expectation of a uniform distribution is it's middle, many
+    //   samples of the timing difference should converge to half of STAGGER
+    // - Otherwise, there is a bug (or bad luck - adjust the sensitivity accordingly)
+    assert_average_percent_error(|| sample_timing_difference(8), STAGGER / 2., 30.);
+}
+
+
+#[cfg(unix)]
+#[test]
+fn retry_on_signal() {
+    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    cmd.arg("--attempts").arg("2");
+    cmd.arg("--wait").arg("0.1");
+    cmd.arg("--retry-if-signal").arg("9");
+    cmd.arg("--").arg("/bin/sh").arg("-c").arg("kill -9 $$");
+
+    cmd.timeout(Duration::from_secs(5));
+    cmd.assert().code(predicate::eq(RETRIES_EXHAUSTED));
+}
+
+#[cfg(unix)]
+#[test]
+fn stop_on_signal() {
+    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    cmd.arg("--attempts").arg("5");
+    cmd.arg("--wait").arg("0.1");
+    cmd.arg("--stop-if-signal").arg("9");
+    cmd.arg("--").arg("/bin/sh").arg("-c").arg("kill -9 $$");
+
+    cmd.timeout(Duration::from_secs(2));
+    cmd.assert().code(predicate::eq(STOPPED));
+}
+

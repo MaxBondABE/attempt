@@ -2,13 +2,15 @@ use std::{
     fmt::{Debug, Display},
     ops::RangeInclusive,
     str::FromStr,
+    u8,
 };
 
+use log::debug;
 use thiserror::Error;
 
 const VALID_STATUS_CODES: RangeInclusive<i32> = (u8::MIN as i32)..=(u8::MAX as i32);
 
-/// A set of status codes which can be parsed from a string.
+/// A set of codes (exit codes or signals) which can be parsed from a string.
 /// A range may be indicated using two dots (eg 1..3).
 /// Different subpatterns may be seperated by a comma (eg 1,2,3..5).
 /// Two dots are used instead of a hyphen so that negative status codes
@@ -16,11 +18,11 @@ const VALID_STATUS_CODES: RangeInclusive<i32> = (u8::MIN as i32)..=(u8::MAX as i
 /// with negative status codes (eg Windows) in the future, without breaking
 /// backwards compatibility.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct StatusCodePattern {
+pub struct CodePattern {
     codes: [bool; 256],
 }
 
-impl StatusCodePattern {
+impl CodePattern {
     pub fn contains(&self, code: i32) -> bool {
         self.codes[code as usize]
     }
@@ -47,7 +49,7 @@ impl StatusCodePattern {
         Self::default().with_code(code)
     }
 }
-impl Default for StatusCodePattern {
+impl Default for CodePattern {
     fn default() -> Self {
         Self {
             codes: [false; 256],
@@ -55,22 +57,23 @@ impl Default for StatusCodePattern {
     }
 }
 
-impl FromStr for StatusCodePattern {
+impl FromStr for CodePattern {
     type Err = ParsingError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        type K = InvalidTokenKind;
+        type K = ParsingErrorKind;
         let mut code_table = [false; 256];
         let mut numeric_characters: Option<RangeInclusive<usize>> = None;
         let mut range_begins: Option<i32> = None;
         let mut dots_in_a_row: usize = 0;
         let mut last_was_whitespace: bool = false;
+        let mut at_least_one_pattern = false;
 
         for (i, char) in s.chars().enumerate() {
             if char != '.' && dots_in_a_row == 1 {
                 // Catch a single dot (1.3 instead of 1..3)
                 return Err(ParsingError {
-                    kind: K::Range,
+                    kind: K::WrongDots,
                     input: s.to_string(),
                     idx: i,
                 });
@@ -84,7 +87,7 @@ impl FromStr for StatusCodePattern {
                     if last_was_whitespace {
                         // Catch bad whitespace (1 2)
                         return Err(ParsingError {
-                            kind: K::Number,
+                            kind: K::InvalidNumber,
                             input: s.to_string(),
                             idx: i - 1,
                         });
@@ -100,7 +103,7 @@ impl FromStr for StatusCodePattern {
                     if last_was_whitespace {
                         // Catch bad whitespace (1. .2)
                         return Err(ParsingError {
-                            kind: K::Range,
+                            kind: K::WrongDots,
                             input: s.to_string(),
                             idx: i - 1,
                         });
@@ -108,23 +111,32 @@ impl FromStr for StatusCodePattern {
                         // Do nothing
                     }
                 } else if dots_in_a_row > 2 {
-                    // Catch too many dots (1...2)
-                    return Err(ParsingError {
-                        kind: K::Range,
-                        input: s.to_string(),
-                        idx: i,
-                    });
+                    if numeric_characters.is_none() {
+                        // Catch too many dots (1...2)
+                        return Err(ParsingError {
+                            kind: K::WrongDots,
+                            input: s.to_string(),
+                            idx: i,
+                        });
+                    } else {
+                        // Catches broken ranges (1..2..3)
+                        return Err(ParsingError {
+                            kind: K::BrokenRange,
+                            input: s.to_string(),
+                            idx: i,
+                        });
+                    }
                 } else if range_begins.is_some() {
                     // Catches broken ranges (1..2..3)
                     return Err(ParsingError {
-                        kind: K::Range,
+                        kind: K::BrokenRange,
                         input: s.to_string(),
                         idx: i,
                     });
                 } else if numeric_characters.is_none() {
                     // No beginning supplied (..1)
                     return Err(ParsingError {
-                        kind: K::Range,
+                        kind: K::HeadlessRange,
                         input: s.to_string(),
                         idx: i,
                     });
@@ -135,14 +147,14 @@ impl FromStr for StatusCodePattern {
                             range_begins = Some(code);
                         } else {
                             return Err(ParsingError {
-                                kind: K::Status,
+                                kind: K::InvalidValue,
                                 input: s.to_string(),
                                 idx: i - dots_in_a_row,
                             });
                         }
                     } else {
                         return Err(ParsingError {
-                            kind: K::Number,
+                            kind: K::InvalidNumber,
                             input: s.to_string(),
                             idx: i - dots_in_a_row,
                         });
@@ -155,20 +167,21 @@ impl FromStr for StatusCodePattern {
                         Ok(c) if VALID_STATUS_CODES.contains(&c) => c,
                         Ok(_) => {
                             return Err(ParsingError {
-                                kind: K::Status,
+                                kind: K::InvalidValue,
                                 input: s.to_string(),
                                 idx: i - 1,
                             });
                         }
                         Err(_) => {
                             return Err(ParsingError {
-                                kind: K::Number,
+                                kind: K::InvalidNumber,
                                 input: s.to_string(),
                                 idx: i - 1,
                             })
                         }
                     };
 
+                    at_least_one_pattern = true;
                     if let Some(begin) = range_begins.take() {
                         // Tolerate backwards ranges
                         let start = begin.min(code);
@@ -181,15 +194,16 @@ impl FromStr for StatusCodePattern {
                         code_table[code as usize] = true;
                     }
                 } else if range_begins.is_some() {
+                    // We started a range we never completed (eg `1..`)
                     return Err(ParsingError {
-                        kind: K::Range,
+                        kind: K::FootlessRange,
                         input: s.to_string(),
                         idx: i,
                     });
                 }
             } else {
                 return Err(ParsingError {
-                    kind: K::Characters,
+                    kind: K::InvalidCharacters,
                     input: s.to_string(),
                     idx: i,
                 });
@@ -204,20 +218,22 @@ impl FromStr for StatusCodePattern {
                 Ok(c) if VALID_STATUS_CODES.contains(&c) => c,
                 Ok(_) => {
                     return Err(ParsingError {
-                        kind: K::Status,
+                        kind: K::InvalidValue,
                         input: s.to_string(),
                         idx: s.len() - 1,
                     });
                 }
-                Err(_) => {
+                Err(e) => {
+                    debug!("Failed to parse integer: {}", e);
                     return Err(ParsingError {
-                        kind: K::Number,
+                        kind: K::InvalidNumber,
                         input: s.to_string(),
                         idx: s.len() - 1,
-                    })
+                    });
                 }
             };
 
+            at_least_one_pattern = true;
             if let Some(begin) = range_begins.take() {
                 // Tolerate backwards ranges
                 let start = begin.min(code);
@@ -231,11 +247,19 @@ impl FromStr for StatusCodePattern {
         } else if range_begins.is_some() {
             // We started a range we never completed (eg `1..`)
             return Err(ParsingError {
-                kind: K::Range,
+                kind: K::FootlessRange,
                 input: s.to_string(),
                 idx: s.len() - 1,
             });
         }
+
+        if !at_least_one_pattern {
+            return Err(ParsingError {
+                kind: ParsingErrorKind::Empty,
+                input: s.to_string(),
+                idx: 0,
+            });
+        };
 
         Ok(Self { codes: code_table })
     }
@@ -243,13 +267,16 @@ impl FromStr for StatusCodePattern {
 
 #[derive(Error, Clone, Debug, PartialEq, Eq)]
 pub struct ParsingError {
-    pub kind: InvalidTokenKind,
+    pub kind: ParsingErrorKind,
     pub input: String,
     pub idx: usize,
 }
 impl Display for ParsingError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
+            // <Error kind>
+            //  <Input>
+            //  <Carat pointing at error>
             "{kind}{newline}{input}{newline}{padding}^",
             newline = "\n  ",
             kind = self.kind,
@@ -260,34 +287,44 @@ impl Display for ParsingError {
 }
 
 #[derive(Error, Debug, Clone, Copy, PartialEq, Eq)]
-pub enum InvalidTokenKind {
+pub enum ParsingErrorKind {
     #[error("Invalid characters: must be digits, commas, periods, or whitespace.")]
-    Characters,
-    #[error("Statuses must be in the range [0, 255].")]
-    Status,
-    #[error("Range could not be understood.")]
-    Range,
-    #[error("Number could not be understood.")]
-    Number,
+    InvalidCharacters,
+    #[error("Invalid value: Must be in the range [0, 255].")]
+    InvalidValue,
+    #[error("Invalid value: Number could not be understood.")]
+    InvalidNumber,
+
+    #[error("Invalid range: Range has no begining.")]
+    HeadlessRange,
+    #[error("Invalid range: Range has no end.")]
+    FootlessRange,
+    #[error("Invalid range: Ranges use two dots (..).")]
+    WrongDots,
+    #[error("Invalid range: Ranges can only be between 2 numbers.")]
+    BrokenRange,
+
+    #[error("Invalid value: Pattern cannot be empty.")]
+    Empty,
 }
 
 #[cfg(test)]
 mod test {
     use super::*;
-    type K = InvalidTokenKind;
+    type K = ParsingErrorKind;
 
     #[test]
     fn parsing_single_status_code() {
-        let s = StatusCodePattern::from_str("1").unwrap();
-        assert_eq!(s, StatusCodePattern::only(1));
+        let s = CodePattern::from_str("1").unwrap();
+        assert_eq!(s, CodePattern::only(1));
         assert!(s.contains(1));
         assert!(!s.contains(0));
     }
 
     #[test]
     fn parsing_several_status_codes() {
-        let s = StatusCodePattern::from_str("1,2,3").unwrap();
-        assert_eq!(s, StatusCodePattern::default().with_range(1..=3));
+        let s = CodePattern::from_str("1,2,3").unwrap();
+        assert_eq!(s, CodePattern::default().with_range(1..=3));
         assert!(s.contains(1));
         assert!(s.contains(2));
         assert!(s.contains(3));
@@ -296,8 +333,8 @@ mod test {
 
     #[test]
     fn parsing_status_code_range() {
-        let s = StatusCodePattern::from_str("1..3").unwrap();
-        assert_eq!(s, StatusCodePattern::default().with_range(1..=3));
+        let s = CodePattern::from_str("1..3").unwrap();
+        assert_eq!(s, CodePattern::default().with_range(1..=3));
         assert!(s.contains(1));
         assert!(s.contains(2));
         assert!(s.contains(3));
@@ -306,17 +343,17 @@ mod test {
 
     #[test]
     fn backwards_ranges_are_fixed() {
-        let a = StatusCodePattern::from_str("1..10").unwrap();
-        let b = StatusCodePattern::from_str("10..1").unwrap();
+        let a = CodePattern::from_str("1..10").unwrap();
+        let b = CodePattern::from_str("10..1").unwrap();
         assert_eq!(a, b);
     }
 
     #[test]
     fn parsing_complex_status_code() {
-        let s = StatusCodePattern::from_str("1..3,5,10..12").unwrap();
+        let s = CodePattern::from_str("1..3,5,10..12").unwrap();
         assert_eq!(
             s,
-            StatusCodePattern::default()
+            CodePattern::default()
                 .with_range(1..=3)
                 .with_code(5)
                 .with_range(10..=12)
@@ -336,18 +373,23 @@ mod test {
 
     #[test]
     fn parsing_status_codes_ignores_gratuitous_commas() {
-        assert!(StatusCodePattern::from_str("1,").is_ok());
-        assert!(StatusCodePattern::from_str(",1").is_ok());
-        assert!(StatusCodePattern::from_str("1,2,,,,").is_ok());
-        assert!(StatusCodePattern::from_str(",,,,1,2").is_ok());
-        assert!(StatusCodePattern::from_str("1,,,,2").is_ok());
+        assert!(CodePattern::from_str("1,").is_ok());
+        assert!(CodePattern::from_str(",1").is_ok());
+        assert!(CodePattern::from_str("1,2,,,,").is_ok());
+        assert!(CodePattern::from_str(",,,,1,2").is_ok());
+        assert!(CodePattern::from_str("1,,,,2").is_ok());
     }
 
     #[test]
     fn parsing_status_codes_fails_on_invalid_chars() {
         fn assert(s: &str) {
-            let err = StatusCodePattern::from_str(s).err().unwrap();
-            assert_eq!(err.kind, K::Characters, "Invalid error kind for \"{}\"", s);
+            let err = CodePattern::from_str(s).err().unwrap();
+            assert_eq!(
+                err.kind,
+                K::InvalidCharacters,
+                "Invalid error kind for \"{}\"",
+                s
+            );
             assert_eq!(err.idx, s.find('!').unwrap(), "Invalid index for \"{}\"", s);
         }
 
@@ -363,8 +405,13 @@ mod test {
     fn parsing_status_codes_fails_on_invalid_status_codes() {
         fn assert(s: &str) {
             const ERR_STR: &str = "256";
-            let err = StatusCodePattern::from_str(s).err().unwrap();
-            assert_eq!(err.kind, K::Status, "Invalid error kind for \"{}\"", s);
+            let err = CodePattern::from_str(s).err().unwrap();
+            assert_eq!(
+                err.kind,
+                K::InvalidValue,
+                "Invalid error kind for \"{}\"",
+                s
+            );
             assert_eq!(
                 err.idx,
                 s.find(ERR_STR).unwrap() + ERR_STR.len() - 1,
@@ -388,67 +435,85 @@ mod test {
 
     #[test]
     fn parsing_status_codes_fails_on_bad_ranges() {
-        let err = StatusCodePattern::from_str("123..").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("123..").err().unwrap();
+        assert_eq!(err.kind, K::FootlessRange);
         assert_eq!(err.idx, 4);
 
-        let err = StatusCodePattern::from_str("..123").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("..123").err().unwrap();
+        assert_eq!(err.kind, K::HeadlessRange);
         assert_eq!(err.idx, 0);
 
-        let err = StatusCodePattern::from_str("1..2..3").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("1..2..3").err().unwrap();
+        assert_eq!(err.kind, K::BrokenRange);
         assert_eq!(err.idx, 4);
 
-        let err = StatusCodePattern::from_str("123..,1").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("123..,1").err().unwrap();
+        assert_eq!(err.kind, K::FootlessRange);
         assert_eq!(err.idx, 5);
 
-        let err = StatusCodePattern::from_str("1,123..").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("1,123..").err().unwrap();
+        assert_eq!(err.kind, K::FootlessRange);
         assert_eq!(err.idx, 6);
 
-        let err = StatusCodePattern::from_str("..123,1").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("..123,1").err().unwrap();
+        assert_eq!(err.kind, K::HeadlessRange);
         assert_eq!(err.idx, 0);
 
-        let err = StatusCodePattern::from_str("1,..123").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("1,..123").err().unwrap();
+        assert_eq!(err.kind, K::HeadlessRange);
         assert_eq!(err.idx, 2);
 
-        let err = StatusCodePattern::from_str("1..2..3,1").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("1..2..3,1").err().unwrap();
+        assert_eq!(err.kind, K::BrokenRange);
         assert_eq!(err.idx, 4);
 
-        let err = StatusCodePattern::from_str("1,1..2..3").err().unwrap();
-        assert_eq!(err.kind, K::Range);
+        let err = CodePattern::from_str("1,1..2..3").err().unwrap();
+        assert_eq!(err.kind, K::BrokenRange);
         assert_eq!(err.idx, 6);
     }
 
     #[test]
     fn valid_whitespace_is_ignored() {
-        let a = StatusCodePattern::from_str("1,2,3").unwrap();
-        let b = StatusCodePattern::from_str("1, 2,\t3").unwrap();
+        let a = CodePattern::from_str("1,2,3").unwrap();
+        let b = CodePattern::from_str("1, 2,\t3").unwrap();
         assert_eq!(a, b);
 
-        let c = StatusCodePattern::from_str("\t\t   \t1, \t2,       3          ").unwrap();
+        let c = CodePattern::from_str("\t\t   \t1, \t2,       3          ").unwrap();
         assert_eq!(a, c);
     }
 
     #[test]
     fn parsing_status_codes_catches_invalid_whitespace() {
-        fn assert(s: &str, kind: InvalidTokenKind) {
-            let err = StatusCodePattern::from_str(s).err().unwrap();
+        fn assert(s: &str, kind: ParsingErrorKind) {
+            let err = CodePattern::from_str(s).err().unwrap();
             assert_eq!(err.kind, kind, "Invalid error kind for \"{}\"", s);
             assert_eq!(err.idx, s.find(' ').unwrap(), "Invalid index for \"{}\"", s);
         }
 
-        assert("1 2", K::Number);
-        assert("5,1 2", K::Number);
-        assert("1 2,5", K::Number);
+        assert("1 2", K::InvalidNumber);
+        assert("5,1 2", K::InvalidNumber);
+        assert("1 2,5", K::InvalidNumber);
 
-        assert("1. .2", K::Range);
-        assert("5,1. .2", K::Range);
-        assert("1. .2,5", K::Range);
+        assert("1. .2", K::WrongDots);
+        assert("5,1. .2", K::WrongDots);
+        assert("1. .2,5", K::WrongDots);
+    }
+
+    #[test]
+    fn parsing_fails_on_empty() {
+        fn assert(s: &str) {
+            let err = CodePattern::from_str(s).err().unwrap();
+            assert_eq!(
+                err.kind,
+                ParsingErrorKind::Empty,
+                "Invalid error kind for \"{}\"",
+                s
+            );
+            assert_eq!(err.idx, 0, "Invalid index for \"{}\"", s);
+        }
+
+        assert("");
+        assert("    ");
+        assert("  ,,,  ");
     }
 }

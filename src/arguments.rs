@@ -11,8 +11,8 @@ use rand_distr::{Distribution, Uniform};
 use regex::Regex;
 
 use crate::util::{
-    status::StatusCodePattern,
     value_parsing::{f32_gte_0, usize_gte_1},
+    pattern::CodePattern,
 };
 
 /// Hack to get a "default" subcommand to work. See ImplicitSubcommandArguments.
@@ -274,7 +274,7 @@ pub struct PolicyParameters {
     /// consisting of a range of codes (eg `1..5`), a series of codes
     /// (eg `1,2,3`), or a combination (eg `1..5,10,15..20`).
     #[arg(long, short = 'S', value_name = "STATUS_CODE", global = true)]
-    pub retry_if_status: Option<StatusCodePattern>,
+    pub retry_if_status: Option<CodePattern>,
 
     /// Retry if the program's output contains this string
     #[arg(long, short = 's', value_name = "STRING", global = true)]
@@ -304,9 +304,25 @@ pub struct PolicyParameters {
     #[arg(long, global = true)]
     pub retry_always: bool,
 
+    /// Retry if the program was killed by a signal. Note that this
+    /// implies --retry-if-timeout, because timed-out commands will be killed.
+    #[arg(long, global = true)]
+    pub retry_if_killed: bool,
+
+    /// Retry if the program was killed by this signal or pattern
+    /// consisting of a range of signals (eg `1..15`), a series of signals
+    /// (eg `9,15,2`), or a combination (eg `1..5,9,15..20`).
+    #[cfg(unix)]
+    #[arg(long, value_name = "SIGNAL", global = true)]
+    pub retry_if_signal: Option<CodePattern>,
+
+    /// Retry if the command has timed out
+    #[arg(long, global = true)]
+    pub retry_if_timeout: bool,
+
     /// Stop retrying if the program exits with this code or pattern
     #[arg(long, value_name = "STATUS_CODE", global = true)]
-    pub stop_if_status: Option<StatusCodePattern>,
+    pub stop_if_status: Option<CodePattern>,
 
     /// Stop retrying if the program's output contains this string
     #[arg(long, value_name = "STRING", global = true)]
@@ -337,6 +353,13 @@ pub struct PolicyParameters {
     #[arg(long, global = true)]
     pub stop_if_killed: bool,
 
+    /// Stop retrying if the program was killed by this signal or pattern
+    /// consisting of a range of signals (eg `1..15`), a series of signals
+    /// (eg `9,15,2`), or a combination (eg `1..5,9,15..20`).
+    #[cfg(unix)]
+    #[arg(long, value_name = "SIGNAL", global = true)]
+    pub stop_if_signal: Option<CodePattern>,
+
     /// Stop retrying if the command has timed out
     #[arg(long, global = true)]
     pub stop_if_timeout: bool,
@@ -363,6 +386,18 @@ impl PolicyParameters {
             && !self.stop_if_timeout
             && !self.retry_failing_status
             && !self.retry_always
+            && !self.retry_if_killed
+            && !self.retry_if_timeout
+            && {
+                #[cfg(unix)]
+                {
+                    self.retry_if_signal.is_none() && self.stop_if_signal.is_none()
+                }
+                #[cfg(not(unix))]
+                {
+                    true
+                }
+            }
     }
 }
 
