@@ -1,0 +1,6 @@
+[book]
+authors = ["Max Bond"]
+language = "en"
+multilingual = false
+src = "src"
+title = "`attempt` User Manual"
