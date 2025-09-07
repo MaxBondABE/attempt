@@ -175,19 +175,19 @@ impl Default for AttemptArguments {
     }
 }
 
-// Hack to get an implicit subcommand to work.
-// - We are abusing the subcommand feature of clap to implement a "mode"
-//  - Rather than branching between different behaviors, we are doing the same
-//    behavior differently.
-// - To implicitly used Fixed if no subcommand is specified, we need to accept
-//  `command` as an argument.
-// - However, subcommands _always_ go last in usage documentation.
-// - Because `command` is a list, it _has_ to go last.
-// - This means clap will output confusing/wrong usage documentation.
-// - Hack: Push `command` down into the subcommands, write _two_ parsers,
-//   and fall back to the implicit behavior if the normal, "explicit" subcommand
-//   fails.
-// NB: We never show help from this parser.
+/// Hack to get an implicit subcommand to work.
+/// - We are abusing the subcommand feature of clap to implement a "mode"
+///  - Rather than branching between different behaviors, we are doing the same
+///    behavior differently.
+/// - To implicitly used Fixed if no subcommand is specified, we need to accept
+///  `command` as an argument.
+/// - However, subcommands _always_ go last in usage documentation.
+/// - Because `command` is a list, it _has_ to go last.
+/// - This means clap will output confusing/wrong usage documentation.
+/// - Hack: Push `command` down into the subcommands, write _two_ parsers,
+///   and fall back to the implicit behavior if the normal, "explicit" subcommand
+///   fails.
+/// NB: We never show help from this parser.
 #[derive(Parser, Debug)]
 pub struct ImplicitSubcommandArguments {
     #[command(flatten)]
