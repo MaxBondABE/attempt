@@ -4,6 +4,7 @@ const FIXED_DELAY: f32 = 60.; // 1m
 const EXP_MULTIPLIER: f32 = 0.010; // 10ms
 const EXP_MAX_DELAY: f32 = 15.; // 15s
 
+/// Trait that decouples access to `std::process::Child::try_wait()` to allow mocking in tests
 pub trait Pollable {
     /// Poll in a non-blocking manner. Return true if the result is ready.
     fn poll(&mut self) -> Result<bool, io::Error>;
