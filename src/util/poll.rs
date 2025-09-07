@@ -25,12 +25,12 @@ pub fn poll_child<P: Pollable>(
     expected_runtime: Option<Duration>,
 ) -> Result<bool, io::Error> {
     #[cfg(test)]
-    use super::testing::fake_sleep_for_polling as sleep;
+    use super::mock_sleep::fake_sleep_for_polling as sleep;
     #[cfg(not(test))]
     use std::thread::sleep;
 
     #[cfg(test)]
-    use super::testing::MockInstant as Instant;
+    use super::mock_sleep::MockInstant as Instant;
     #[cfg(not(test))]
     use std::time::Instant;
 
@@ -91,7 +91,7 @@ pub fn poll_child<P: Pollable>(
 
 #[cfg(test)]
 mod test {
-    use crate::util::testing::MockSleep;
+    use crate::util::mock_sleep::{MockInstant, MockSleep};
 
     use super::*;
 

@@ -38,7 +38,7 @@ fn attempt(args: AttemptArguments) -> Result<Outcome, io::Error> {
     #[cfg(not(test))]
     use std::thread::sleep;
     #[cfg(test)]
-    use util::testing::fake_sleep_for_attempt as sleep;
+    use util::mock_sleep::fake_sleep_for_attempt as sleep;
 
     if let Some(delay) = args.wait_params.stagger_delay() {
         info!("Staggering by {:.2} seconds", delay.as_secs_f32());

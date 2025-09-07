@@ -1,4 +1,3 @@
-/// Utilities for use in unit testing.
 use std::{
     mem,
     sync::{Mutex, MutexGuard},
@@ -11,6 +10,8 @@ use once_cell::sync::Lazy;
 
 const MIN_SLEEP: Duration = Duration::from_nanos(1);
 
+// The context lock serializes tests using the mock, so that they don't see
+// each other's writes
 static CONTEXT: Mutex<()> = Mutex::new(());
 static MOCK_SLEEP: Lazy<Mutex<MockSleep>> = Lazy::new(|| Mutex::new(Default::default()));
 static MOCK_INSTANT_GLOBAL_TIME: Lazy<Mutex<Duration>> =
@@ -20,15 +21,14 @@ static MOCK_INSTANT_GLOBAL_TIME: Lazy<Mutex<Duration>> =
 pub struct ContextToken<'a>(MutexGuard<'a, ()>);
 
 /// Global state for mocked sleep
-#[derive(Default)]
 pub struct MockSleep {
     poll_delays: Vec<Duration>,
     attempt_delays: Vec<Duration>,
 }
 impl MockSleep {
     fn take_inner(&mut self) -> (Vec<Duration>, Vec<Duration>) {
-        let mut poll_delays = Vec::new();
-        let mut attempt_delays = Vec::new();
+        let mut poll_delays = Vec::with_capacity(16);
+        let mut attempt_delays = Vec::with_capacity(16);
         mem::swap(&mut poll_delays, &mut self.poll_delays);
         mem::swap(&mut attempt_delays, &mut self.attempt_delays);
         (poll_delays, attempt_delays)
@@ -46,6 +46,14 @@ impl MockSleep {
         let guard = CONTEXT.lock().unwrap();
         MOCK_SLEEP.lock().unwrap().clear();
         ContextToken(guard)
+    }
+}
+impl Default for MockSleep {
+    fn default() -> Self {
+        Self {
+            poll_delays: Vec::with_capacity(16),
+            attempt_delays: Vec::with_capacity(16),
+        }
     }
 }
 
