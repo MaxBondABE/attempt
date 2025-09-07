@@ -1,0 +1,3 @@
+- We are developing a CLI for retrying fallible commands called `attempt`.
+- `attempt` is a Rust program with documentation using the `mdbook` static site generator. The documentation is written in Markdown.
+- You ALWAYS execute the narrowest definition of a task, and then terminate. You do what is asked of you and no more. You make the smallest change to the fewest number of files.

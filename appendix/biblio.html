@@ -1,0 +1,288 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Bibliography - &#x60;attempt&#x60; User Manual</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="../favicon.svg">
+        <link rel="shortcut icon" href="../favicon.png">
+        <link rel="stylesheet" href="../css/variables.css">
+        <link rel="stylesheet" href="../css/general.css">
+        <link rel="stylesheet" href="../css/chrome.css">
+        <link rel="stylesheet" href="../css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="../FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="../fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="../highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="../tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="../ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "../";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "../searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="../toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="../toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">&#x60;attempt&#x60; User Manual</h1>
+
+                    <div class="right-buttons">
+                        <a href="../print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="bibliography"><a class="header" href="#bibliography">Bibliography</a></h1>
+<p>This bibliography presents works for the following uses:</p>
+<ul>
+<li>To fact check claims made in this manual.</li>
+<li>To provide further guidance in cases this manual doesn't address.</li>
+<li>To supply context about <code>attempt</code>'s design.</li>
+</ul>
+<h1 id="tenacity"><a class="header" href="#tenacity">Tenacity</a></h1>
+<p><a href="https://tenacity.readthedocs.io/en/latest/">Tenacity</a> is a Python library for retrying. It is the
+primary inspiration for <code>attempt</code>'s design.</p>
+<p>Tenacity forked from <a href="https://github.com/rholder/retrying">Retrying</a> in 2016 as it's original author
+and maintainer, Ray Holder, stopped responding to members of the community who reached out. Holder
+wrote Retrying in 2013.</p>
+<p>Retrying is currently maintained by Greg Roodt in
+<a href="https://github.com/groodt/retrying">a seperate fork</a>. Roodt organized the transfer of the
+<code>retrying</code> package name name in 2022. He attempting to transfer the name to Tenacity, but while he
+succeeded in taking over the name, the issue to transfer ownership to Tenacity was not followed up
+on. It remains open at the time of this writing. Roodt's fork recieves periodic updates.</p>
+<p>Retrying established the core concepts of the architecture:</p>
+<ul>
+<li>An <code>@retry(...)</code> decorator which retries a wrapped function</li>
+<li>Three categories of rules, which together for the retrying strategy
+<ul>
+<li>Retry rules, determining which circumstances result in a retry</li>
+<li>Stop rules, determining which cirucmstances terminate retrying</li>
+<li>Wait rules, determining how long we sleep after an attempt</li>
+</ul>
+</li>
+</ul>
+<p>Retrying baked it's predicates into the arguments of the <code>@retry(...)</code> decorator, much like
+<code>attempt</code>.</p>
+<p>Tenacity extended the architecture to support functions as arguments, unlocking arbitrary
+predicates, and to use context managers in addition to decorators. It added support for async
+contexts. Tenacity has also created a large library of utilities and extensive documentation.</p>
+<h2 id="additional-links"><a class="header" href="#additional-links">Additional links</a></h2>
+<ul>
+<li><a href="https://github.com/rholder/retrying/issues/65">Retrying issue 65: Friendly fork?</a></li>
+<li><a href="https://github.com/rholder/retrying/issues/100">Retrying issue 100: Maintenance status</a></li>
+<li><a href="https://github.com/rholder/retrying/issues/97">Retrying issue 97: Transfer ownership to tenacity</a></li>
+<li><a href="https://github.com/jd/tenacity/issues/356">Tenacity issue 356: Publish under retrying on PyPI</a></li>
+<li><a href="https://github.com/pypi/support/issues/2205">pypi issue 2205: Request: retrying</a></li>
+</ul>
+<h1 id="references"><a class="header" href="#references">References</a></h1>
+<ul>
+<li><a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/retry-backoff.html">Retry and backoff pattern</a>
+from AWS Prescriptive Guidance</li>
+<li><a href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">Exponential backoff and jitter</a>
+by Marc Brooker, AWS</li>
+<li><a href="https://learn.microsoft.com/en-us/azure/architecture/best-practices/transient-faults">Transient fault handling</a>
+from Azure Architecture Center</li>
+<li><a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/retry">Retry pattern</a> from Azure
+Architecture Center</li>
+<li><a href="https://dl.acm.org/doi/pdf/10.1145/166237.166241">The Synchronization of Periodic Routing Messages</a>
+by Sally Floyd and Van Jacobsen, Lawrence Berkeley Laboratory</li>
+</ul>
+<h1 id="case-studies"><a class="header" href="#case-studies">Case studies</a></h1>
+<ul>
+<li><a href="https://cloud.google.com/blog/products/gcp/how-to-avoid-a-self-inflicted-ddos-attack-cre-life-lessons">How to avoid a self-inflicted DDoS attack: CRE Life Lessons</a>
+by Dave Rensin and Adrian Hilton, Google</li>
+<li><a href="https://medium.com/%40writetokrishna/preventing-db-failures-exponential-retries-with-jitter-34b86e23eda8">Preventing DB failures - Exponential retries with Jitter</a>
+by Krishnakumar Sathyanarayana</li>
+<li><a href="https://medium.com/yandex/good-retry-bad-retry-an-incident-story-648072d3cee6">Good Retry, Bad Retry: An Incident Story</a>
+by Denis Isaev, Yandex</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="../appendix/parent.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="../appendix/parent.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="../elasticlunr.min.js"></script>
+        <script src="../mark.min.js"></script>
+        <script src="../searcher.js"></script>
+
+        <script src="../clipboard.min.js"></script>
+        <script src="../highlight.js"></script>
+        <script src="../book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

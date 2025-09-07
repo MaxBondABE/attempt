@@ -1,0 +1,321 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>Introduction - &#x60;attempt&#x60; User Manual</title>
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">&#x60;attempt&#x60; User Manual</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p><code>attempt</code> allows you to retry fallible commands with a delay. It accepts the command line of a child
+command. This command is run repeatedly, until it either completes without failing or the allowed
+number of retries is exhausted.</p>
+<p>There are two cases when this is often used:</p>
+<ul>
+<li>In an environment like <code>docker-compose</code>, where a service may need to wait on it's dependencies to
+start up (compare to <a href="https://github.com/vishnubob/wait-for-it"><code>wait-for-it.sh</code></a>)</li>
+<li>When writing shell scripts accessing remote resources which may become temporarily unavailable</li>
+</ul>
+<h1 id="why-does-retrying-work"><a class="header" href="#why-does-retrying-work">Why does retrying work?</a></h1>
+<h2 id="many-failures-are-transient"><a class="header" href="#many-failures-are-transient">Many failures are transient</a></h2>
+<p>Many failures are transient, even flukes, and are unlikely to be rencountered if retried. For
+example, a system we integrate with may have a rare bug that impacts some small number of requests
+arbitrarily, without regards to their content. Such bugs may go a long time before they are fixed.
+In such a case, immediately retrying the request would succeed.</p>
+<h2 id="many-systems-self-heal"><a class="header" href="#many-systems-self-heal">Many systems self-heal</a></h2>
+<p>Many systems are able to provision additional capacity in response to increased load. If given time
+to scale, these systems will process our requests successfully.</p>
+<h1 id="retry-strategies"><a class="header" href="#retry-strategies">Retry strategies</a></h1>
+<p><code>attempt</code> accepts various arguments to configure it's behavior and how it responds to failures.
+Together these form our retry strategy.</p>
+<h2 id="retry-policy"><a class="header" href="#retry-policy">Retry policy</a></h2>
+<p>The retry policy allows us to distinguish between temporary and permanent error condtions, to
+determine whether we should try another attempt. We can look at a command's exit status, or we can
+inspect it's output for relevant messages.</p>
+<p>Failures such as network timeouts or rate limiting errors (like the HTTP status code 429) should be
+retried. Failures that stem from the content of our requests (like the HTTP status code 422) will
+not succeed on a retry, and so we should terminate.</p>
+<h2 id="backoff-schedule"><a class="header" href="#backoff-schedule">Backoff schedule</a></h2>
+<p>The backoff schedule determines how long we wait between successive attempts. The simplest schedule
+is a fixed delay, where we wait the same amount of time between all attempts. But it's often a good
+idea to wait longer the more failures we encounter to avoid sending requests to an already
+overloaded system.</p>
+<p>We may want an aggressive backoff schedule with short delays, so that we recover from transient
+failures quickly. But longer delays allow systems to self-heal.</p>
+<p>The exponential backoff strategy allows us to balance these concerns. In exponential backoff we
+double the amount of time we wait after each failure. This allows us to start with an aggressive
+delay but to fall back to a long delay if the outage proves persistent.</p>
+<h2 id="retry-limit"><a class="header" href="#retry-limit">Retry limit</a></h2>
+<p>Retry logic without a retry limit is an infinite loop. We'll need to pick some sort of limit.</p>
+<p>There is a tradeoff between how long we keep retrying and how quickly we can act on an irrecoverable
+failure. The longer we wait, the more likely we are to recover from a transient failure. But if our
+command is never going to succeed, we want to know sooner than later so that we can investigate and
+fix the problem. We'll need to set a retry limit that balances these concerns.</p>
+<h2 id="jitter"><a class="header" href="#jitter">Jitter</a></h2>
+<p>An essential element of any retry strategy is random jitter. If we do not add randomness to the
+delays produced by our retry strategy, we will encounter emergent cyclic behavior. Concurrent
+retriers will syncronize with each other. This will create huge spikes in requests per second where
+all clients send requests at once.</p>
+<p>Random jitter breaks up these emergent patterns and flattens the RPS curve. This helps systems that
+are having trouble or need to scale recover smoothly.</p>
+<h1 id="lifecycle-of-an-attempt"><a class="header" href="#lifecycle-of-an-attempt">Lifecycle of an attempt</a></h1>
+<ol>
+<li>The child command is executed.</li>
+<li>The retry policy is evaluated against the child command.</li>
+<li>If a stop rule is matched, we terminate the program immediately.</li>
+<li>If a retry rule is matched, and we have not reached the allowed number of retries, return to
+step 1.</li>
+<li>Otherwise, we terminate the program.</li>
+</ol>
+<h2 id="peaking-under-the-hood-with---verbose"><a class="header" href="#peaking-under-the-hood-with---verbose">Peaking under the hood with <code>--verbose</code></a></h2>
+<p>We can use the <code>--verbose</code> argument to expose these steps of the lifecycle. To show all the
+information available, we'll use <code>--verbose --verbose</code>, shortened to <code>-vv</code>.</p>
+<p>Let's run <code>attempt</code> against <code>/bin/true</code>, a program that always succeeds.</p>
+<pre><code class="language-bash">&gt; attempt -vv /bin/true
+Starting new attempt...
+Evaluating policy...
+Command exited: exit status: 0.
+Stop: Command was successful.
+Terminated: Success.
+&gt;
+</code></pre>
+<p><code>true</code> exited with a status of <code>0</code>, indicating success. Because it was successful, it was not
+eligible to be retried. And so, <code>attempt</code> exits.</p>
+<p>Now let's try running <code>attempt</code> against <code>/bin/false</code>, a program which always fails.</p>
+<pre><code class="language-bash">&gt; attempt -vv /bin/false
+Starting new attempt...
+Evaluating policy...
+Command exited: exit status: 1.
+Retry: Command failed.
+Command has failed, retrying in 1.00 seconds...
+Starting new attempt...
+Evaluating policy...
+Command exited: exit status: 1.
+Retry: Command failed.
+Command has failed, retrying in 1.00 seconds...
+Starting new attempt...
+Evaluating policy...
+Command exited: exit status: 1.
+Retry: Command failed.
+Terminated: Retries exhausted.
+&gt;
+</code></pre>
+<p><code>false</code> always exits with a status of <code>1</code>, and so <code>attempt</code> will always retry it if possible. By
+default, <code>attempt</code> waits for 1 second between attempts, and will retry a maximum of 3 times. After
+the third attempt, the program exits.</p>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+                            <a rel="next prefetch" href="usage.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+                    <a rel="next prefetch" href="usage.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+
+
+    </div>
+    </body>
+</html>

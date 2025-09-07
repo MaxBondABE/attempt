@@ -1,0 +1,913 @@
+<!DOCTYPE HTML>
+<html lang="en" class="light sidebar-visible" dir="ltr">
+    <head>
+        <!-- Book generated using mdBook -->
+        <meta charset="UTF-8">
+        <title>&#x60;attempt&#x60; User Manual</title>
+        <meta name="robots" content="noindex">
+
+
+        <!-- Custom HTML head -->
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="theme-color" content="#ffffff">
+
+        <link rel="icon" href="favicon.svg">
+        <link rel="shortcut icon" href="favicon.png">
+        <link rel="stylesheet" href="css/variables.css">
+        <link rel="stylesheet" href="css/general.css">
+        <link rel="stylesheet" href="css/chrome.css">
+        <link rel="stylesheet" href="css/print.css" media="print">
+
+        <!-- Fonts -->
+        <link rel="stylesheet" href="FontAwesome/css/font-awesome.css">
+        <link rel="stylesheet" href="fonts/fonts.css">
+
+        <!-- Highlight.js Stylesheets -->
+        <link rel="stylesheet" id="highlight-css" href="highlight.css">
+        <link rel="stylesheet" id="tomorrow-night-css" href="tomorrow-night.css">
+        <link rel="stylesheet" id="ayu-highlight-css" href="ayu-highlight.css">
+
+        <!-- Custom theme stylesheets -->
+
+
+        <!-- Provide site root and default themes to javascript -->
+        <script>
+            const path_to_root = "";
+            const default_light_theme = "light";
+            const default_dark_theme = "navy";
+            window.path_to_searchindex_js = "searchindex.js";
+        </script>
+        <!-- Start loading toc.js asap -->
+        <script src="toc.js"></script>
+    </head>
+    <body>
+    <div id="mdbook-help-container">
+        <div id="mdbook-help-popup">
+            <h2 class="mdbook-help-title">Keyboard shortcuts</h2>
+            <div>
+                <p>Press <kbd>←</kbd> or <kbd>→</kbd> to navigate between chapters</p>
+                <p>Press <kbd>S</kbd> or <kbd>/</kbd> to search in the book</p>
+                <p>Press <kbd>?</kbd> to show this help</p>
+                <p>Press <kbd>Esc</kbd> to hide this help</p>
+            </div>
+        </div>
+    </div>
+    <div id="body-container">
+        <!-- Work around some values being stored in localStorage wrapped in quotes -->
+        <script>
+            try {
+                let theme = localStorage.getItem('mdbook-theme');
+                let sidebar = localStorage.getItem('mdbook-sidebar');
+
+                if (theme.startsWith('"') && theme.endsWith('"')) {
+                    localStorage.setItem('mdbook-theme', theme.slice(1, theme.length - 1));
+                }
+
+                if (sidebar.startsWith('"') && sidebar.endsWith('"')) {
+                    localStorage.setItem('mdbook-sidebar', sidebar.slice(1, sidebar.length - 1));
+                }
+            } catch (e) { }
+        </script>
+
+        <!-- Set the theme before any content is loaded, prevents flash -->
+        <script>
+            const default_theme = window.matchMedia("(prefers-color-scheme: dark)").matches ? default_dark_theme : default_light_theme;
+            let theme;
+            try { theme = localStorage.getItem('mdbook-theme'); } catch(e) { }
+            if (theme === null || theme === undefined) { theme = default_theme; }
+            const html = document.documentElement;
+            html.classList.remove('light')
+            html.classList.add(theme);
+            html.classList.add("js");
+        </script>
+
+        <input type="checkbox" id="sidebar-toggle-anchor" class="hidden">
+
+        <!-- Hide / unhide sidebar before it is displayed -->
+        <script>
+            let sidebar = null;
+            const sidebar_toggle = document.getElementById("sidebar-toggle-anchor");
+            if (document.body.clientWidth >= 1080) {
+                try { sidebar = localStorage.getItem('mdbook-sidebar'); } catch(e) { }
+                sidebar = sidebar || 'visible';
+            } else {
+                sidebar = 'hidden';
+                sidebar_toggle.checked = false;
+            }
+            if (sidebar === 'visible') {
+                sidebar_toggle.checked = true;
+            } else {
+                html.classList.remove('sidebar-visible');
+            }
+        </script>
+
+        <nav id="sidebar" class="sidebar" aria-label="Table of contents">
+            <!-- populated by js -->
+            <mdbook-sidebar-scrollbox class="sidebar-scrollbox"></mdbook-sidebar-scrollbox>
+            <noscript>
+                <iframe class="sidebar-iframe-outer" src="toc.html"></iframe>
+            </noscript>
+            <div id="sidebar-resize-handle" class="sidebar-resize-handle">
+                <div class="sidebar-resize-indicator"></div>
+            </div>
+        </nav>
+
+        <div id="page-wrapper" class="page-wrapper">
+
+            <div class="page">
+                <div id="menu-bar-hover-placeholder"></div>
+                <div id="menu-bar" class="menu-bar sticky">
+                    <div class="left-buttons">
+                        <label id="sidebar-toggle" class="icon-button" for="sidebar-toggle-anchor" title="Toggle Table of Contents" aria-label="Toggle Table of Contents" aria-controls="sidebar">
+                            <i class="fa fa-bars"></i>
+                        </label>
+                        <button id="theme-toggle" class="icon-button" type="button" title="Change theme" aria-label="Change theme" aria-haspopup="true" aria-expanded="false" aria-controls="theme-list">
+                            <i class="fa fa-paint-brush"></i>
+                        </button>
+                        <ul id="theme-list" class="theme-popup" aria-label="Themes" role="menu">
+                            <li role="none"><button role="menuitem" class="theme" id="default_theme">Auto</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="light">Light</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="rust">Rust</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="coal">Coal</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="navy">Navy</button></li>
+                            <li role="none"><button role="menuitem" class="theme" id="ayu">Ayu</button></li>
+                        </ul>
+                        <button id="search-toggle" class="icon-button" type="button" title="Search (`/`)" aria-label="Toggle Searchbar" aria-expanded="false" aria-keyshortcuts="/ s" aria-controls="searchbar">
+                            <i class="fa fa-search"></i>
+                        </button>
+                    </div>
+
+                    <h1 class="menu-title">&#x60;attempt&#x60; User Manual</h1>
+
+                    <div class="right-buttons">
+                        <a href="print.html" title="Print this book" aria-label="Print this book">
+                            <i id="print-button" class="fa fa-print"></i>
+                        </a>
+
+                    </div>
+                </div>
+
+                <div id="search-wrapper" class="hidden">
+                    <form id="searchbar-outer" class="searchbar-outer">
+                        <div class="search-wrapper">
+                            <input type="search" id="searchbar" name="searchbar" placeholder="Search this book ..." aria-controls="searchresults-outer" aria-describedby="searchresults-header">
+                            <div class="spinner-wrapper">
+                                <i class="fa fa-spinner fa-spin"></i>
+                            </div>
+                        </div>
+                    </form>
+                    <div id="searchresults-outer" class="searchresults-outer hidden">
+                        <div id="searchresults-header" class="searchresults-header"></div>
+                        <ul id="searchresults">
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Apply ARIA attributes after the sidebar and the sidebar toggle button are added to the DOM -->
+                <script>
+                    document.getElementById('sidebar-toggle').setAttribute('aria-expanded', sidebar === 'visible');
+                    document.getElementById('sidebar').setAttribute('aria-hidden', sidebar !== 'visible');
+                    Array.from(document.querySelectorAll('#sidebar a')).forEach(function(link) {
+                        link.setAttribute('tabIndex', sidebar === 'visible' ? 0 : -1);
+                    });
+                </script>
+
+                <div id="content" class="content">
+                    <main>
+                        <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
+<p><code>attempt</code> allows you to retry fallible commands with a delay. It accepts the command line of a child
+command. This command is run repeatedly, until it either completes without failing or the allowed
+number of retries is exhausted.</p>
+<p>There are two cases when this is often used:</p>
+<ul>
+<li>In an environment like <code>docker-compose</code>, where a service may need to wait on it's dependencies to
+start up (compare to <a href="https://github.com/vishnubob/wait-for-it"><code>wait-for-it.sh</code></a>)</li>
+<li>When writing shell scripts accessing remote resources which may become temporarily unavailable</li>
+</ul>
+<h1 id="why-does-retrying-work"><a class="header" href="#why-does-retrying-work">Why does retrying work?</a></h1>
+<h2 id="many-failures-are-transient"><a class="header" href="#many-failures-are-transient">Many failures are transient</a></h2>
+<p>Many failures are transient, even flukes, and are unlikely to be rencountered if retried. For
+example, a system we integrate with may have a rare bug that impacts some small number of requests
+arbitrarily, without regards to their content. Such bugs may go a long time before they are fixed.
+In such a case, immediately retrying the request would succeed.</p>
+<h2 id="many-systems-self-heal"><a class="header" href="#many-systems-self-heal">Many systems self-heal</a></h2>
+<p>Many systems are able to provision additional capacity in response to increased load. If given time
+to scale, these systems will process our requests successfully.</p>
+<h1 id="retry-strategies"><a class="header" href="#retry-strategies">Retry strategies</a></h1>
+<p><code>attempt</code> accepts various arguments to configure it's behavior and how it responds to failures.
+Together these form our retry strategy.</p>
+<h2 id="retry-policy"><a class="header" href="#retry-policy">Retry policy</a></h2>
+<p>The retry policy allows us to distinguish between temporary and permanent error condtions, to
+determine whether we should try another attempt. We can look at a command's exit status, or we can
+inspect it's output for relevant messages.</p>
+<p>Failures such as network timeouts or rate limiting errors (like the HTTP status code 429) should be
+retried. Failures that stem from the content of our requests (like the HTTP status code 422) will
+not succeed on a retry, and so we should terminate.</p>
+<h2 id="backoff-schedule"><a class="header" href="#backoff-schedule">Backoff schedule</a></h2>
+<p>The backoff schedule determines how long we wait between successive attempts. The simplest schedule
+is a fixed delay, where we wait the same amount of time between all attempts. But it's often a good
+idea to wait longer the more failures we encounter to avoid sending requests to an already
+overloaded system.</p>
+<p>We may want an aggressive backoff schedule with short delays, so that we recover from transient
+failures quickly. But longer delays allow systems to self-heal.</p>
+<p>The exponential backoff strategy allows us to balance these concerns. In exponential backoff we
+double the amount of time we wait after each failure. This allows us to start with an aggressive
+delay but to fall back to a long delay if the outage proves persistent.</p>
+<h2 id="retry-limit"><a class="header" href="#retry-limit">Retry limit</a></h2>
+<p>Retry logic without a retry limit is an infinite loop. We'll need to pick some sort of limit.</p>
+<p>There is a tradeoff between how long we keep retrying and how quickly we can act on an irrecoverable
+failure. The longer we wait, the more likely we are to recover from a transient failure. But if our
+command is never going to succeed, we want to know sooner than later so that we can investigate and
+fix the problem. We'll need to set a retry limit that balances these concerns.</p>
+<h2 id="jitter"><a class="header" href="#jitter">Jitter</a></h2>
+<p>An essential element of any retry strategy is random jitter. If we do not add randomness to the
+delays produced by our retry strategy, we will encounter emergent cyclic behavior. Concurrent
+retriers will syncronize with each other. This will create huge spikes in requests per second where
+all clients send requests at once.</p>
+<p>Random jitter breaks up these emergent patterns and flattens the RPS curve. This helps systems that
+are having trouble or need to scale recover smoothly.</p>
+<h1 id="lifecycle-of-an-attempt"><a class="header" href="#lifecycle-of-an-attempt">Lifecycle of an attempt</a></h1>
+<ol>
+<li>The child command is executed.</li>
+<li>The retry policy is evaluated against the child command.</li>
+<li>If a stop rule is matched, we terminate the program immediately.</li>
+<li>If a retry rule is matched, and we have not reached the allowed number of retries, return to
+step 1.</li>
+<li>Otherwise, we terminate the program.</li>
+</ol>
+<h2 id="peaking-under-the-hood-with---verbose"><a class="header" href="#peaking-under-the-hood-with---verbose">Peaking under the hood with <code>--verbose</code></a></h2>
+<p>We can use the <code>--verbose</code> argument to expose these steps of the lifecycle. To show all the
+information available, we'll use <code>--verbose --verbose</code>, shortened to <code>-vv</code>.</p>
+<p>Let's run <code>attempt</code> against <code>/bin/true</code>, a program that always succeeds.</p>
+<pre><code class="language-bash">&gt; attempt -vv /bin/true
+Starting new attempt...
+Evaluating policy...
+Command exited: exit status: 0.
+Stop: Command was successful.
+Terminated: Success.
+&gt;
+</code></pre>
+<p><code>true</code> exited with a status of <code>0</code>, indicating success. Because it was successful, it was not
+eligible to be retried. And so, <code>attempt</code> exits.</p>
+<p>Now let's try running <code>attempt</code> against <code>/bin/false</code>, a program which always fails.</p>
+<pre><code class="language-bash">&gt; attempt -vv /bin/false
+Starting new attempt...
+Evaluating policy...
+Command exited: exit status: 1.
+Retry: Command failed.
+Command has failed, retrying in 1.00 seconds...
+Starting new attempt...
+Evaluating policy...
+Command exited: exit status: 1.
+Retry: Command failed.
+Command has failed, retrying in 1.00 seconds...
+Starting new attempt...
+Evaluating policy...
+Command exited: exit status: 1.
+Retry: Command failed.
+Terminated: Retries exhausted.
+&gt;
+</code></pre>
+<p><code>false</code> always exits with a status of <code>1</code>, and so <code>attempt</code> will always retry it if possible. By
+default, <code>attempt</code> waits for 1 second between attempts, and will retry a maximum of 3 times. After
+the third attempt, the program exits.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="example-usage"><a class="header" href="#example-usage">Example usage</a></h1>
+<h2 id="basic-usage"><a class="header" href="#basic-usage">Basic usage</a></h2>
+<pre><code class="language-bash"># Basic example
+attempt /bin/false
+attempt --verbose /bin/false
+</code></pre>
+<h2 id="disambiguating-child-arguments"><a class="header" href="#disambiguating-child-arguments">Disambiguating child arguments</a></h2>
+<pre><code class="language-bash"># Use `--` to disambiguate between arguments to `attempt` and arguments to
+# it's child command
+attempt -a 10 -- foo -a bar
+</code></pre>
+<h2 id="a-sqlx-example"><a class="header" href="#a-sqlx-example">A <code>sqlx</code> example</a></h2>
+<pre><code class="language-bash"># Rerun database migrations if the server was not ready
+# Useful for `docker-compose` and similar tools (any place
+# you'd use `wait-for-it.sh` &amp; aren't restricted to bash).
+attempt --retry-if-contains "server not ready" sqlx migrate
+</code></pre>
+<h2 id="using-an-exponential-backoff"><a class="header" href="#using-an-exponential-backoff">Using an exponential backoff</a></h2>
+<pre><code class="language-bash"># Use exponential backoff
+attempt exp /bin/false
+attempt exponential /bin/false
+
+# Change the multiplier from 1 second to 100 milliseconds. Instead of starting
+# with a 1 second delay (then 2s, 4s, 8s, ...), use a 100 millisecond delay
+# (then 200ms, 400ms, 800ms, ...).
+attempt exp -x 100ms
+attempt exp --multiplier 100ms
+
+# Change the base from 2 to 3. This will triple the delay between every
+# attempt, rather than doubling it.
+attempt exp -b 3
+attempt exp --base 3
+</code></pre>
+<h2 id="change-the-number-of-attempts"><a class="header" href="#change-the-number-of-attempts">Change the number of attempts</a></h2>
+<pre><code class="language-bash"># Change the number of attempts from 3 to 10
+attempt -a 10 /bin/false
+attempt --attempts 10 /bin/false
+</code></pre>
+<h2 id="add-random-jitter-to-the-wait-time"><a class="header" href="#add-random-jitter-to-the-wait-time">Add random jitter to the wait time</a></h2>
+<pre><code class="language-bash"># Add 1 second of random jitter to wait time
+attempt -j 1 /bin/false
+attempt --jitter 1 /bin/false
+</code></pre>
+<h2 id="setting-a-minimum-or-maximum-wait-time"><a class="header" href="#setting-a-minimum-or-maximum-wait-time">Setting a minimum or maximum wait time</a></h2>
+<pre><code class="language-bash"># Set a minimum wait time of 5 seconds between attempts
+attempt -m 5 /bin/false
+attempt --wait-min 5 /bin/false
+
+# Set a maximum wait time of 30 seconds between attempts
+attempt -M 30 exponential /bin/false
+attempt --wait-max 30 exponential /bin/false
+
+# Combine min and max wait times
+attempt -m 2 -M 10 exponential /bin/false
+</code></pre>
+<h2 id="setting-a-timeout-on-child-command-runtime"><a class="header" href="#setting-a-timeout-on-child-command-runtime">Setting a timeout on child command runtime</a></h2>
+<pre><code class="language-bash"># Kill the child command if it runs longer than 30 seconds
+attempt -t 30 -- sleep 60
+attempt --timeout 30 -- sleep 60
+</code></pre>
+<h2 id="retrying-on-status-codes"><a class="header" href="#retrying-on-status-codes">Retrying on status codes</a></h2>
+<pre><code class="language-bash"># Retry on any failing status code (non-zero)
+attempt -F /bin/false
+attempt --retry-failing-status /bin/false
+
+# Retry only on specific status codes
+attempt --retry-if-status 1 /bin/false
+attempt --retry-if-status "1,2,3" /bin/false # Retry on 1, 2, or 3
+attempt --retry-if-status "1..5" /bin/false # Retry on any status between 1 and 5
+attempt --retry-if-status "1..5,10,15..20" /bin/false # Combine rules to form complex patterns
+
+# Retry connection timeouts with `curl`
+attempt --retry-if-status 28 curl https://example.com
+
+# Stop retrying on specific status codes
+attempt --stop-if-status 2 command_with_permanent_errors
+</code></pre>
+<h2 id="retrying-on-child-command-output"><a class="header" href="#retrying-on-child-command-output">Retrying on child command output</a></h2>
+<pre><code class="language-bash"># Retry if output contains a specific string
+attempt --retry-if-contains "Connection timed out" curl https://example.com
+attempt --retry-if-stderr-contains "Connection timed out" curl https://example.com
+
+# Retry if output matches a regex pattern
+attempt --retry-if-matches "error \d+" error_prone_command
+attempt --retry-if-stdout-matches "failed.*retry" flaky_service
+
+# Stop retrying if output indicates permanent failure
+attempt --stop-if-contains "Authentication failed" secure_command
+attempt --stop-if-stderr-contains "Authentication failed" secure_command
+</code></pre>
+<h2 id="as-a-long-running-parent-process"><a class="header" href="#as-a-long-running-parent-process">As a long-running parent process</a></h2>
+<pre><code class="language-bash"># Always restart the child command if it exits, and do not wait before restarting
+attempt --forever --wait 0 long_running_service
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<p>TBD</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="backoff-schedule-1"><a class="header" href="#backoff-schedule-1">Backoff schedule</a></h1>
+<p>The backoff schedule determines how long we wait between successive attempts. The simplest schedule
+is a fixed delay, where we wait the same amount of time between all attempts. But it's often a good
+idea to wait longer the more failures we encounter to avoid sending requests to an already
+overloaded system.</p>
+<p>We may want an aggressive backoff schedule with short delays, so that we recover from transient
+failures quickly. But longer delays allow systems to self-heal.</p>
+<p>The exponential backoff strategy allows us to balance these concerns. In exponential backoff we
+double the amount of time we wait after each failure. This allows us to start with an aggressive
+delay but to fall back to a long delay if the outage proves persistent.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="fixed-schedule"><a class="header" href="#fixed-schedule">Fixed schedule</a></h1>
+<p>Fixed delay is the default schedule. It sleeps for a constant amount of time between attempts.</p>
+<div class="table-wrapper"><table><thead><tr><th>Attempt</th><th>Delay</th></tr></thead><tbody>
+<tr><td>0</td><td>1</td></tr>
+<tr><td>1</td><td>1</td></tr>
+<tr><td>2</td><td>1</td></tr>
+</tbody></table>
+</div>
+<h1 id="example"><a class="header" href="#example">Example</a></h1>
+<pre><code class="language-bash"># Because it is the default, specifying `fixed` is optional
+attempt /bin/false
+attempt fixed /bin/false
+
+# Change the wait time from the default of 1 second to 15 seconds
+attempt fixed -w 15 /bin/false
+attempt fixed --wait 15 /bin/false
+</code></pre>
+<h1 id="arguments"><a class="header" href="#arguments">Arguments</a></h1>
+<h2 id="-w---wait-seconds"><a class="header" href="#-w---wait-seconds"><code>-w --wait &lt;SECONDS&gt;</code></a></h2>
+<p>The amount of time to sleep between attempts.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="exponential-schedule"><a class="header" href="#exponential-schedule">Exponential schedule</a></h1>
+<p>Wait exponentially more time between attempts, using the following formula:</p>
+<p><code>&lt;multiplier&gt; * (&lt;base&gt; ^ &lt;attempts&gt;)</code></p>
+<div class="table-wrapper"><table><thead><tr><th>Attempt</th><th>Delay</th></tr></thead><tbody>
+<tr><td>0</td><td>1</td></tr>
+<tr><td>1</td><td>2</td></tr>
+<tr><td>2</td><td>4</td></tr>
+</tbody></table>
+</div>
+<p>The attempt counter starts at 0, so the first wait is is for <code>&lt;multiplier&gt;</code> seconds.</p>
+<h1 id="example-1"><a class="header" href="#example-1">Example</a></h1>
+<pre><code class="language-bash">attempt exponential /bin/false
+attempt exp /bin/false
+
+# Change the multiplier from the default of 1 to 2
+attempt exponential -x 2 /bin/false
+attempt exponential --multiplier 2 /bin/false
+
+# Change the exponential base from the default of 2 to 5
+attempt exponential -b 5 /bin/false
+attempt exponential --base 5 /bin/false
+</code></pre>
+<h1 id="arguments-1"><a class="header" href="#arguments-1">Arguments</a></h1>
+<h2 id="-b---base-base"><a class="header" href="#-b---base-base"><code>-b --base &lt;BASE&gt;</code></a></h2>
+<p>The base of the exponential function. The default is 2, corresponding to doubling the wait time
+between attempts.</p>
+<h2 id="-x---multipler-multiplier"><a class="header" href="#-x---multipler-multiplier"><code>-x --multipler &lt;MULTIPLIER&gt;</code></a></h2>
+<p>Scale of the exponential function. The default is 1.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="linear-schedule"><a class="header" href="#linear-schedule">Linear schedule</a></h1>
+<p>Wait more time between attempts, using the following formula:</p>
+<p><code>(&lt;multiplier&gt; * &lt;attempts&gt;) + &lt;starting_wait&gt;</code>.</p>
+<div class="table-wrapper"><table><thead><tr><th>Attempt</th><th>Delay</th></tr></thead><tbody>
+<tr><td>0</td><td>1</td></tr>
+<tr><td>1</td><td>2</td></tr>
+<tr><td>2</td><td>3</td></tr>
+</tbody></table>
+</div>
+<h1 id="example-2"><a class="header" href="#example-2">Example</a></h1>
+<pre><code class="language-bash">attempt linear /bin/false
+
+# Change the multiplier from the default of 1 to 2
+attempt linear -x 2 /bin/false
+attempt linear --multiplier 2 /bin/false
+
+# Change the starting wait from the default of 1 to 5
+attempt linear -W 5 /bin/false
+attempt linear --starting-wait 5 /bin/false
+</code></pre>
+<h1 id="arguments-2"><a class="header" href="#arguments-2">Arguments</a></h1>
+<h2 id="-w---starting-wait-starting_wait"><a class="header" href="#-w---starting-wait-starting_wait"><code>-w --starting-wait &lt;STARTING_WAIT&gt;</code></a></h2>
+<p>The number of seconds to wait after the first attempts.</p>
+<h2 id="-x---multiplier-multiplier"><a class="header" href="#-x---multiplier-multiplier"><code>-x --multiplier &lt;MULTIPLIER&gt;</code></a></h2>
+<p>The number of additional seconds to wait after each subsequent request.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="policy-controls"><a class="header" href="#policy-controls">Policy controls</a></h1>
+<p>Policy controls define the conditions under whether <code>attempt</code> decides to retry or stop retrying a
+command. They use predicates that examine the command's exit status, output, or signals.</p>
+<p>Each predicate has two variants: retry and stop. Retry predicates cause <code>attempt</code> to retry the
+command, while stop predicates cause us to terminate.</p>
+<h2 id="usage"><a class="header" href="#usage">Usage</a></h2>
+<p>Retry predicates are used to identify temporary error conditions, such as network timeouts or rate
+limiting errors, which may be resolved by retrying. <code>attempt</code> will try to rerun the child command if
+a retry predicate is matched. It will may be prevented from doing so if the maximum number of
+attempts has been reached, or if a stop predicate is matched.</p>
+<p>Stop predicates are used to identify permanent error conditions, such as authentication errors or
+malformed content errors, which will never be resolved by retrying. If a stop predicate matches,
+<code>attempt</code> will imediately cease retrying the child command.</p>
+<h2 id="precedence"><a class="header" href="#precedence">Precedence</a></h2>
+<p>Stop predicates always have precedence over retry predicates.</p>
+<pre><code class="language-bash">&gt; attempt --stop-if-status 1 --retry-if-status 1 /bin/false
+Command exited: exit status: 1.
+Stop: Status matches.
+Terminated: Command has failed, but cannot be retried.
+&gt;
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="the-default-policy"><a class="header" href="#the-default-policy">The default policy</a></h1>
+<p>If no policy controls are specified, <code>attempt</code> will retry if the child command which exits with a
+status other than 0 or that is killed by a signal. It will retry a maximum of 3 times with a fixed
+delay of 1 second.</p>
+<p>This is equivalent to the following arguments:</p>
+<pre><code class="language-bash">attempt \
+    fixed --wait 1s \
+    --attempts 3 \
+    --retry-failing-status \
+    --retry-if-killed \
+   /bin/false
+</code></pre>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="retry-control"><a class="header" href="#retry-control">Retry control</a></h1>
+<h2 id="-a---attempts"><a class="header" href="#-a---attempts"><code>-a --attempts</code></a></h2>
+<p>The number of times the child command is retried.</p>
+<h2 id="-u---unlimited-attempts"><a class="header" href="#-u---unlimited-attempts"><code>-U --unlimited-attempts</code></a></h2>
+<p>Continue retrying until the command is successful, without limiting the number of retries.</p>
+<h2 id="--retry-always"><a class="header" href="#--retry-always"><code>--retry-always</code></a></h2>
+<p>Always retry, unless a stop predicate is triggered.</p>
+<h2 id="--forever"><a class="header" href="#--forever"><code>--forever</code></a></h2>
+<p>This will continue retrying the command forever, regardless of whether it succeeds or fails. This is
+useful for long-running services you wish to restart if they crash.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="status-predicates"><a class="header" href="#status-predicates">Status predicates</a></h1>
+<p>Make policy decisions based on the child command's
+<a href="https://en.wikipedia.org/wiki/Exit_status">exit code</a>. Note that commands killed by a signal do not
+have an exit code; these predicates will not impact programs which timed out, ran out of memory, or
+which crashed due to a segmentation fault, or were otherwise killed by a signal.</p>
+<h2 id="performance"><a class="header" href="#performance">Performance</a></h2>
+<p>Status predicates are very cheap and are typically stable across versions of the child command. They
+should be preffered whenever possible.</p>
+<h2 id="status-patterns"><a class="header" href="#status-patterns">Status patterns</a></h2>
+<p>Status predicates attempt to match the child's exit code against a pattern supplied in the argument.
+The syntax for patterns is as follows.</p>
+<ul>
+<li>Individual codes: <code>1</code></li>
+<li>Inclusive ranges: <code>1..5</code></li>
+<li>Combinations of patterns: <code>1,2,3,10..15</code></li>
+<li>Whitespace is allowed: <code>1, 2, 3</code></li>
+<li>Note that valid status codes are in the range [0, 255]</li>
+</ul>
+<h2 id="retry-predicates"><a class="header" href="#retry-predicates">Retry predicates</a></h2>
+<h3 id="-f---retry-failing-status"><a class="header" href="#-f---retry-failing-status"><code>-F, --retry-failing-status</code></a></h3>
+<p>Retry when the command exits with any non-zero status code. This is a convenient shorthand if you
+want to retry on failure but still want to combine other predicates (for example, additional
+output-based predicates).</p>
+<h3 id="--retry-if-status-status_code"><a class="header" href="#--retry-if-status-status_code"><code>--retry-if-status &lt;STATUS_CODE&gt;</code></a></h3>
+<p>Retry if the child process exit code matches the given status pattern.</p>
+<h2 id="stop-predicates"><a class="header" href="#stop-predicates">Stop predicates</a></h2>
+<h3 id="--stop-if-status-status_code"><a class="header" href="#--stop-if-status-status_code"><code>--stop-if-status &lt;STATUS_CODE&gt;</code></a></h3>
+<p>Stop retrying if the child process exit code matches the given status pattern.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="output-predicates"><a class="header" href="#output-predicates">Output predicates</a></h1>
+<p>Output predicates examine the text written to stdout and stderr by the child command to determine
+whether to retry or stop. These predicates are useful when exit codes alone don't provide enough
+information about the failure condition.</p>
+<h2 id="performance-1"><a class="header" href="#performance-1">Performance</a></h2>
+<p>Output predicates are often more convinient than status predicates, and users are encouraged to use
+them when in circumstances when developer time is the greatest concern (such as in command lines and
+for throw-away scripts). However, they are discouraged in scripting or CI use.</p>
+<p>Output predicates are the most expensive. They require additional system calls to retrieve the
+output and additional computation to search it. They are typically unstable across different
+versions of the child process.</p>
+<p>Status predicates should be prefferred when possible. If output predicates are used, the more
+specific predicates (eg <code>--retry-if-stdout-contains</code> vs <code>--retry-if-contains</code>) should be preferred.</p>
+<h2 id="regular-expression-syntax"><a class="header" href="#regular-expression-syntax">Regular expression syntax</a></h2>
+<p>The regular expression predicates use the
+<a href="https://docs.rs/regex/latest/regex/#syntax"><code>regex</code> crate's syntax</a>.</p>
+<h2 id="retry-predicates-1"><a class="header" href="#retry-predicates-1">Retry predicates</a></h2>
+<h3 id="--retry-if-contains-string"><a class="header" href="#--retry-if-contains-string"><code>--retry-if-contains &lt;STRING&gt;</code></a></h3>
+<p>Retry if either stdout or stderr contains the specified string.</p>
+<h3 id="--retry-if-matches-regex"><a class="header" href="#--retry-if-matches-regex"><code>--retry-if-matches &lt;REGEX&gt;</code></a></h3>
+<p>Retry if either stdout or stderr matches the specified regular expression.</p>
+<h3 id="--retry-if-stdout-contains-string"><a class="header" href="#--retry-if-stdout-contains-string"><code>--retry-if-stdout-contains &lt;STRING&gt;</code></a></h3>
+<p>Retry if stdout contains the specified string.</p>
+<h3 id="--retry-if-stdout-matches-regex"><a class="header" href="#--retry-if-stdout-matches-regex"><code>--retry-if-stdout-matches &lt;REGEX&gt;</code></a></h3>
+<p>Retry if stdout matches the specified regular expression.</p>
+<h3 id="--retry-if-stderr-contains-string"><a class="header" href="#--retry-if-stderr-contains-string"><code>--retry-if-stderr-contains &lt;STRING&gt;</code></a></h3>
+<p>Retry if stderr contains the specified string.</p>
+<h3 id="--retry-if-stderr-matches-regex"><a class="header" href="#--retry-if-stderr-matches-regex"><code>--retry-if-stderr-matches &lt;REGEX&gt;</code></a></h3>
+<p>Retry if stderr matches the specified regular expression.</p>
+<h2 id="stop-predicates-1"><a class="header" href="#stop-predicates-1">Stop predicates</a></h2>
+<h3 id="--stop-if-contains-string"><a class="header" href="#--stop-if-contains-string"><code>--stop-if-contains &lt;STRING&gt;</code></a></h3>
+<p>Stop retrying if either stdout or stderr contains the specified string.</p>
+<h3 id="--stop-if-matches-regex"><a class="header" href="#--stop-if-matches-regex"><code>--stop-if-matches &lt;REGEX&gt;</code></a></h3>
+<p>Stop retrying if either stdout or stderr matches the specified regular expression.</p>
+<h3 id="--stop-if-stdout-contains-string"><a class="header" href="#--stop-if-stdout-contains-string"><code>--stop-if-stdout-contains &lt;STRING&gt;</code></a></h3>
+<p>Stop retrying if stdout contains the specified string.</p>
+<h3 id="--stop-if-stdout-matches-regex"><a class="header" href="#--stop-if-stdout-matches-regex"><code>--stop-if-stdout-matches &lt;REGEX&gt;</code></a></h3>
+<p>Stop retrying if stdout matches the specified regular expression.</p>
+<h3 id="--stop-if-stderr-contains-string"><a class="header" href="#--stop-if-stderr-contains-string"><code>--stop-if-stderr-contains &lt;STRING&gt;</code></a></h3>
+<p>Stop retrying if stderr contains the specified string.</p>
+<h3 id="--stop-if-stderr-matches-regex"><a class="header" href="#--stop-if-stderr-matches-regex"><code>--stop-if-stderr-matches &lt;REGEX&gt;</code></a></h3>
+<p>Stop retrying if stderr matches the specified regular expression.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="timeout--signal-control"><a class="header" href="#timeout--signal-control">Timeout &amp; signal control</a></h1>
+<p>Signal and timeout predicates control how <code>attempt</code> handles commands that are terminated by signals
+or exceed time limits. These predicates are particularly useful for managing long-running processes
+and handling system-level interruptions.</p>
+<h2 id="understanding-signals-and-timeouts"><a class="header" href="#understanding-signals-and-timeouts">Understanding signals and timeouts</a></h2>
+<p>When a process is killed by a signal (such as SIGTERM, SIGKILL, or SIGINT), it does not exit with a
+normal status code. Instead, the process is terminated externally. Timeouts in <code>attempt</code> work by
+sending signals to child processes that exceed their time limit.</p>
+<h2 id="retry-predicates-2"><a class="header" href="#retry-predicates-2">Retry predicates</a></h2>
+<h3 id="--stop-if-killed"><a class="header" href="#--stop-if-killed"><code>--stop-if-killed</code></a></h3>
+<p>Retry the command if it was killed by a signal. This includes timeouts, since timeouts use signals
+to terminate processes.</p>
+<h2 id="stop-predicates-2"><a class="header" href="#stop-predicates-2">Stop predicates</a></h2>
+<h3 id="--stop-if-killed-1"><a class="header" href="#--stop-if-killed-1"><code>--stop-if-killed</code></a></h3>
+<p>Stop retrying if the command was killed by any signal. This includes timeouts, since timeouts use
+signals to terminate processes.</p>
+<p>When this option is enabled, any command that is terminated by a signal will not be retried,
+regardless of what caused the signal.</p>
+<h3 id="--stop-if-timeout"><a class="header" href="#--stop-if-timeout"><code>--stop-if-timeout</code></a></h3>
+<p>Stop retrying if the command was killed specifically due to a timeout. This requires that the
+<code>--timeout</code> option is also specified.</p>
+<p>This is more specific than <code>--stop-if-killed</code> - it only prevents retries when the termination was
+caused by <code>attempt</code>'s timeout mechanism, not other signals.</p>
+<h2 id="default-behavior"><a class="header" href="#default-behavior">Default behavior</a></h2>
+<p>By default, <code>attempt</code> will retry commands that are killed by signals, treating them the same as
+commands that exit with non-zero status codes. This behavior can be changed using the predicates
+above.</p>
+<h2 id="relationship-between-predicates"><a class="header" href="#relationship-between-predicates">Relationship between predicates</a></h2>
+<p>Note that <code>--stop-if-killed</code> implies <code>--stop-if-timeout</code>, since timeouts work by sending signals to
+terminate processes. If you use <code>--stop-if-killed</code>, you don't need to also specify
+<code>--stop-if-timeout</code>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="timing-controls"><a class="header" href="#timing-controls">Timing controls</a></h1>
+<p>Timing controls adjust how <code>attempt</code> manages time-related aspects of command retries. They determine
+the delays between attempts and the time limits for each attempt.</p>
+<p>This chapter describes options for wait modification, including jitter and stagger, as well as
+timeout configuration. These controls help balance retry responsiveness and resource usage.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="wait-control"><a class="header" href="#wait-control">Wait control</a></h1>
+<h2 id="-j---jitter-seconds"><a class="header" href="#-j---jitter-seconds"><code>-j --jitter &lt;SECONDS&gt;</code></a></h2>
+<p>For a jitter value of <code>n</code>, adds a value in the interval <code>[0, n]</code> to the delay time. This is useful
+for preventing "thundering herd" issues. Jitter is always added last, so even if the delay was
+rounded by <code>--wait-min/--wait-max</code>, it will still be randomized.</p>
+<h2 id="-m---wait-min-seconds"><a class="header" href="#-m---wait-min-seconds"><code>-m --wait-min &lt;SECONDS&gt;</code></a></h2>
+<p>Round any delay smaller than the specified minimum up to that minimum.</p>
+<h2 id="-m---wait-max-seconds"><a class="header" href="#-m---wait-max-seconds"><code>-M --wait-max &lt;SECONDS&gt;</code></a></h2>
+<p>Round any delay larger than the specified maximum up to that maximum. This is useful when using the
+linear or exponential strategies, to ensure that you do not sleep for an unbounded amount of time.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="timeout-control"><a class="header" href="#timeout-control">Timeout control</a></h1>
+<h2 id="-t---timeout-seconds"><a class="header" href="#-t---timeout-seconds"><code>-t --timeout &lt;SECONDS&gt;</code></a></h2>
+<p>Kill the child command if it does not complete within the timeout. This prevents <code>attempt</code> from
+waiting indefinitely on a child that may never exit. For instance, the child could be stuck in an
+infinite loop.</p>
+<p>The child is polled using an exponential backoff with a base of 2 and a multiplier of 10ms,
+saturating at a maximum delay of 15s.</p>
+<h2 id="-r---expected-runtime-seconds"><a class="header" href="#-r---expected-runtime-seconds"><code>-R --expected-runtime &lt;SECONDS&gt;</code></a></h2>
+<p>Specify how much time the command is expected to take. The child command will be polled slowly
+during this time (once per minute).</p>
+<p>This is useful to reduce load on the system. An assumption made in the design of the timeout feature
+that most commands exit quickly, so the child is polled fairly aggressively. This may adversely
+impact performance for some use cases.</p>
+<h2 id="--retry-if-timeout"><a class="header" href="#--retry-if-timeout"><code>--retry-if-timeout</code></a></h2>
+<p>Stop the command if it was killed by a signal. This includes timeouts, since timeouts use signals to
+terminate processes.</p>
+<h2 id="--stop-if-timeout-1"><a class="header" href="#--stop-if-timeout-1"><code>--stop-if-timeout</code></a></h2>
+<p>Stop the command if it was killed by a signal. This includes timeouts, since timeouts use signals to
+terminate processes.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="exit-codes"><a class="header" href="#exit-codes">Exit codes</a></h1>
+<p>The following exit codes are used by <code>attempt</code> to indicate whether it failed and how. Scripts should
+use these exit codes and not the log messages exposed by <code>--verbose</code>; these exit codes will remain
+stable, but no such guarantee is made for the log messages.</p>
+<div class="table-wrapper"><table><thead><tr><th>Code number</th><th>Description</th></tr></thead><tbody>
+<tr><td>0</td><td>Command was run successfully within the allowed number of retries.</td></tr>
+<tr><td>1</td><td>I/O error (eg, command not found). An error message will be printed.</td></tr>
+<tr><td>2</td><td>Invalid arguments. An error message will be printed.</td></tr>
+<tr><td>3</td><td>The number of retries has been exhausted without the command ever succeeding.</td></tr>
+<tr><td>4</td><td>The number of retries has not been exhausted, but the command is no longer retryable because of a "stop" predicate.</td></tr>
+<tr><td>101</td><td><code>attempt</code> has crashed. The most likely cause is using output predicates on data which is not UTF-8 encoded.</td></tr>
+</tbody></table>
+</div><div style="break-before: page; page-break-before: always;"></div><h1 id="advice-for-scripting"><a class="header" href="#advice-for-scripting">Advice for Scripting</a></h1>
+<h2 id="use-an-exponential-backoff"><a class="header" href="#use-an-exponential-backoff">Use an exponential backoff</a></h2>
+<p><a href="https://en.wikipedia.org/wiki/Exponential_backoff">Exponential backoff</a> allows you to retry
+aggressively at first while quickly backing off to a significant wait time. Many errors are
+transient, and worked around by retrying quickly. Other errors may take a long time to resolve, and
+<a href="https://en.wikipedia.org/wiki/Thundering_herd_problem">may not resolve</a> if we stress the system
+with load.</p>
+<p>Leave the <code>base</code> argument as it's default of 2, and use the <code>multiplier</code> argument to control how
+aggressively you retry. If you want it to be very aggressive, use a value of <code>0.050</code> (50
+milliseconds), and if you want it to be very conservative, use a value of <code>60</code> (1 minute). The
+default of 1 second is a good balance overall, but if you are accessing public resources, consider
+using a value of 5 seconds or greater as a courtesy.</p>
+<h2 id="set-a-max-wait-time"><a class="header" href="#set-a-max-wait-time">Set a max wait time</a></h2>
+<p>Set max wait to a reasonable value, like <code>900</code> (15 minutes), so that you do not wait an unbounded
+amount amount of time. This is especially important when using an exponential backoff.</p>
+<h2 id="add-jitter-to-the-wait-time"><a class="header" href="#add-jitter-to-the-wait-time">Add jitter to the wait time</a></h2>
+<p>Random jitter will help you avoid emergent cyclic behavior. This may occur if your script is running
+on multiple systems concurrently, or if you are accessing a public resource and many programmers
+chose similar constants for their retry logic (eg, if everyone chooses round numbers, then they all
+will be multiples of 5, and at some point everyone's retry logic will sync up and make a request at
+the exact same time). A useful metaphor is
+<a href="https://www.youtube.com/watch?v=T58lGKREubo">metronome synchronization</a>.</p>
+<p>See also the <a href="https://en.wikipedia.org/wiki/Thundering_herd_problem">thundering herd problem</a>.</p>
+<h2 id="set-a-timeout-on-the-child-command"><a class="header" href="#set-a-timeout-on-the-child-command">Set a timeout on the child command</a></h2>
+<p>Set a timeout on the child command so that you don't get stuck if there is an infinite loop, dead
+lock, or similar issue. Set the</p>
+<h2 id="avoid-output-predicates"><a class="header" href="#avoid-output-predicates">Avoid output predicates</a></h2>
+<p>Output predicates can create performance issues. Try to use status predicates whenever possible.</p>
+<p>If you must use an output predicate, use the specific <code>stdout</code> or <code>stderr</code> variant. The generic
+variants are provided for convenience, but are not as performant.</p>
+<h2 id="write-child-processes-to-fail-fast"><a class="header" href="#write-child-processes-to-fail-fast">Write child processes to fail fast</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><p>attempt/docs/src/appendix/parent.md</p>
+<h1 id="using-attempt-as-a-parent-process"><a class="header" href="#using-attempt-as-a-parent-process">Using attempt as a parent process</a></h1>
+<p><code>attempt</code> is primarily a CLI retry tool, but many people want to use it as a simple
+parent/supervisor for short-lived services or to restart a process inside a container. The following
+guidance covers the most important considerations and recommended patterns when running <code>attempt</code> as
+a parent process.</p>
+<h2 id="what-attempt-is-and-isnt"><a class="header" href="#what-attempt-is-and-isnt">What <code>attempt</code> is (and isn't)</a></h2>
+<ul>
+<li><code>attempt</code> is a retry wrapper: it runs a child command, observes its exit status and output
+according to predicates, and optionally retries with a configurable backoff.</li>
+<li>It is not a full init system or process supervisor. It does not attempt to implement all PID1
+responsibilities (signal handling, reaping complicated process trees, service metadata, graceful
+shutdown orchestration, etc.). If you need a robust init/supervisor, prefer dedicated tools
+(systemd, runit, s6, supervisord) or a tiny init for containers (like <code>tini</code> or <code>dumb-init</code>) and
+use <code>attempt</code> for restart/retry behavior when appropriate.</li>
+</ul>
+<h2 id="signals--shutdown"><a class="header" href="#signals--shutdown">Signals &amp; shutdown</a></h2>
+<ul>
+<li>If your environment relies on signal forwarding (for example, your container runtime sends SIGTERM
+to PID 1), be aware that <code>attempt</code> may not forward every signal exactly like a dedicated init
+would. If proper signal forwarding and reaping is required, run <code>attempt</code> under a minimal init
+such as <code>tini</code> rather than as PID 1 directly.</li>
+<li>Use <code>--stop-if-killed</code> to avoid retrying when the child is killed by a signal; otherwise <code>attempt</code>
+may consider the child retryable. Note that <code>--stop-if-timeout</code> implies that a timed-out child
+(which is killed by the timeout mechanism) will not be retried.</li>
+<li>If you rely on <code>--timeout</code>, <code>attempt</code> will kill the child when the timeout expires. Use
+<code>--stop-if-timeout</code> if you want that situation to stop further retries.</li>
+</ul>
+<h2 id="long-running-services"><a class="header" href="#long-running-services">Long-running services</a></h2>
+<ul>
+<li>For long-running services you want to restart if they crash, use:
+<ul>
+<li><code>--forever</code> (restart regardless of success/failure), or</li>
+<li><code>-U/--unlimited-attempts</code> with an appropriate retry predicate.</li>
+</ul>
+</li>
+<li>Example: keep a service running, restarting on any crash:</li>
+</ul>
+<pre><code class="language-docs/usage.md#L1-20">attempt --forever /usr/local/bin/myservice --serve
+</code></pre>
+<ul>
+<li>If you want some backoff between restarts, configure a backoff strategy. A gentle exponential with
+jitter helps avoid rapid restart loops and thundering-herd problems.</li>
+</ul>
+<h2 id="recommended-strategy-settings-for-parent-like-use"><a class="header" href="#recommended-strategy-settings-for-parent-like-use">Recommended strategy settings for parent-like use</a></h2>
+<ul>
+<li>Use exponential backoff with a sensible multiplier and a maximum wait time to avoid unbounded
+sleeps:</li>
+</ul>
+<pre><code class="language-docs/usage.md#L1-20">attempt exponential --multiplier 2 --base 2 --wait-max 900 --jitter 5 --forever /usr/local/bin/myservice
+</code></pre>
+<ul>
+<li>Add <code>--jitter</code> to avoid synchronized retries when many instances are managed externally.</li>
+<li>Use <code>--stagger</code> if you launch many <code>attempt</code> parents at once (for example, from an orchestrator)
+to randomize initial starts.</li>
+</ul>
+<h2 id="timeouts--expected-runtime"><a class="header" href="#timeouts--expected-runtime">Timeouts &amp; expected-runtime</a></h2>
+<ul>
+<li>Always set <code>--timeout</code> for commands that might hang or deadlock. Without a timeout you risk
+<code>attempt</code> waiting indefinitely on a hung child.</li>
+<li>Use <code>--expected-runtime</code> to tell <code>attempt</code> how long a normal run should take; during that period
+it will poll the child less aggressively (reducing system load). This is useful for services that
+perform occasional long-running initialization.</li>
+</ul>
+<h2 id="predicates--performance"><a class="header" href="#predicates--performance">Predicates &amp; performance</a></h2>
+<ul>
+<li>Prefer status code predicates (like <code>--retry-if-status</code>) over output predicates
+(<code>--retry-if-contains</code>, <code>--retry-if-matches</code>) because output predicates require capturing and
+scanning stdout/stderr and may cause performance issues for verbose processes.</li>
+<li>If you must inspect output, prefer the specific <code>--retry-if-stdout-*</code> or <code>--retry-if-stderr-*</code>
+variants rather than the generic versions.</li>
+<li>Remember that "stop" predicates take precedence over "retry" predicates. Use <code>--stop-if-*</code> to
+abort retries for unrecoverable situations.</li>
+</ul>
+<h2 id="exit-codes-for-supervising-processes"><a class="header" href="#exit-codes-for-supervising-processes">Exit codes (for supervising processes)</a></h2>
+<p><code>attempt</code> uses stable exit codes your supervisor or orchestration tooling can rely on. The important
+ones:</p>
+<ul>
+<li><code>0</code> — child eventually ran successfully within allowed retries</li>
+<li><code>1</code> — I/O error (e.g. command not found)</li>
+<li><code>2</code> — invalid arguments (bad invocation)</li>
+<li><code>3</code> — retries exhausted without success</li>
+<li><code>4</code> — stopped early because a "stop" predicate triggered</li>
+<li><code>101</code> — internal crash (e.g. encountering non-UTF-8 when using output predicates)</li>
+</ul>
+<p>Use these exit codes to distinguish between transient failures (which may be retriable by the
+supervisor) and configuration or internal errors that merit operator attention.</p>
+<h2 id="when-used-in-containers"><a class="header" href="#when-used-in-containers">When used in containers</a></h2>
+<ul>
+<li>Do not use <code>attempt</code> as a drop-in PID 1 if you need proper signal handling or reaping. Instead:
+<ul>
+<li>Run a tiny init (e.g. <code>tini</code>) as PID 1 and run <code>attempt</code> as a child under that init; or</li>
+<li>Use your container orchestration restart features and rely on <code>attempt</code> only for retry/backoff
+logic inside the container if you understand its limits.</li>
+</ul>
+</li>
+<li>Example with a minimal init:</li>
+</ul>
+<pre><code class="language-docs/usage.md#L1-20">tini -- attempt --forever --stagger 5 --jitter 3 /usr/local/bin/myservice --serve
+</code></pre>
+<h2 id="practical-examples"><a class="header" href="#practical-examples">Practical examples</a></h2>
+<ul>
+<li>Restart a service on crash, but give it 1s, 2s, 4s between restarts with jitter and a max wait:</li>
+</ul>
+<pre><code class="language-docs/usage.md#L1-20">attempt exponential --multiplier 1 --base 2 --wait-max 60 --jitter 2 --forever /usr/local/bin/myservice
+</code></pre>
+<ul>
+<li>Start multiple small workers at once but avoid thundering herd at boot:</li>
+</ul>
+<pre><code class="language-docs/usage.md#L1-20">attempt --stagger 10 --jitter 3 --forever /usr/local/bin/worker --do-work
+</code></pre>
+<ul>
+<li>Restart only on certain exit codes (useful when your program uses specific codes to signal
+"temporary" failures):</li>
+</ul>
+<pre><code class="language-docs/usage.md#L1-20">attempt --retry-if-status 100..199 --forever /usr/local/bin/task-runner
+</code></pre>
+<h2 id="summary-checklist"><a class="header" href="#summary-checklist">Summary checklist</a></h2>
+<ul>
+<li>If you need robust init semantics, use a real init and run <code>attempt</code> under it.</li>
+<li>Use <code>--forever</code> or <code>-U</code> for restart-as-parent behavior.</li>
+<li>Configure backoff, jitter, and wait max to avoid hot loops and thundering-herd issues.</li>
+<li>Set <code>--timeout</code> and <code>--expected-runtime</code> to avoid hangs and reduce polling load.</li>
+<li>Prefer status predicates over output predicates for performance.</li>
+<li>Use exit codes to inform your higher-level supervisor about why <code>attempt</code> exited.</li>
+</ul>
+<p>If you want, I can add a short example <code>Dockerfile</code> or a tiny <code>systemd</code> unit showing a recommended
+invocation for a container or service manager.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="bibliography"><a class="header" href="#bibliography">Bibliography</a></h1>
+<p>This bibliography presents works for the following uses:</p>
+<ul>
+<li>To fact check claims made in this manual.</li>
+<li>To provide further guidance in cases this manual doesn't address.</li>
+<li>To supply context about <code>attempt</code>'s design.</li>
+</ul>
+<h1 id="tenacity"><a class="header" href="#tenacity">Tenacity</a></h1>
+<p><a href="https://tenacity.readthedocs.io/en/latest/">Tenacity</a> is a Python library for retrying. It is the
+primary inspiration for <code>attempt</code>'s design.</p>
+<p>Tenacity forked from <a href="https://github.com/rholder/retrying">Retrying</a> in 2016 as it's original author
+and maintainer, Ray Holder, stopped responding to members of the community who reached out. Holder
+wrote Retrying in 2013.</p>
+<p>Retrying is currently maintained by Greg Roodt in
+<a href="https://github.com/groodt/retrying">a seperate fork</a>. Roodt organized the transfer of the
+<code>retrying</code> package name name in 2022. He attempting to transfer the name to Tenacity, but while he
+succeeded in taking over the name, the issue to transfer ownership to Tenacity was not followed up
+on. It remains open at the time of this writing. Roodt's fork recieves periodic updates.</p>
+<p>Retrying established the core concepts of the architecture:</p>
+<ul>
+<li>An <code>@retry(...)</code> decorator which retries a wrapped function</li>
+<li>Three categories of rules, which together for the retrying strategy
+<ul>
+<li>Retry rules, determining which circumstances result in a retry</li>
+<li>Stop rules, determining which cirucmstances terminate retrying</li>
+<li>Wait rules, determining how long we sleep after an attempt</li>
+</ul>
+</li>
+</ul>
+<p>Retrying baked it's predicates into the arguments of the <code>@retry(...)</code> decorator, much like
+<code>attempt</code>.</p>
+<p>Tenacity extended the architecture to support functions as arguments, unlocking arbitrary
+predicates, and to use context managers in addition to decorators. It added support for async
+contexts. Tenacity has also created a large library of utilities and extensive documentation.</p>
+<h2 id="additional-links"><a class="header" href="#additional-links">Additional links</a></h2>
+<ul>
+<li><a href="https://github.com/rholder/retrying/issues/65">Retrying issue 65: Friendly fork?</a></li>
+<li><a href="https://github.com/rholder/retrying/issues/100">Retrying issue 100: Maintenance status</a></li>
+<li><a href="https://github.com/rholder/retrying/issues/97">Retrying issue 97: Transfer ownership to tenacity</a></li>
+<li><a href="https://github.com/jd/tenacity/issues/356">Tenacity issue 356: Publish under retrying on PyPI</a></li>
+<li><a href="https://github.com/pypi/support/issues/2205">pypi issue 2205: Request: retrying</a></li>
+</ul>
+<h1 id="references"><a class="header" href="#references">References</a></h1>
+<ul>
+<li><a href="https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/retry-backoff.html">Retry and backoff pattern</a>
+from AWS Prescriptive Guidance</li>
+<li><a href="https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/">Exponential backoff and jitter</a>
+by Marc Brooker, AWS</li>
+<li><a href="https://learn.microsoft.com/en-us/azure/architecture/best-practices/transient-faults">Transient fault handling</a>
+from Azure Architecture Center</li>
+<li><a href="https://learn.microsoft.com/en-us/azure/architecture/patterns/retry">Retry pattern</a> from Azure
+Architecture Center</li>
+<li><a href="https://dl.acm.org/doi/pdf/10.1145/166237.166241">The Synchronization of Periodic Routing Messages</a>
+by Sally Floyd and Van Jacobsen, Lawrence Berkeley Laboratory</li>
+</ul>
+<h1 id="case-studies"><a class="header" href="#case-studies">Case studies</a></h1>
+<ul>
+<li><a href="https://cloud.google.com/blog/products/gcp/how-to-avoid-a-self-inflicted-ddos-attack-cre-life-lessons">How to avoid a self-inflicted DDoS attack: CRE Life Lessons</a>
+by Dave Rensin and Adrian Hilton, Google</li>
+<li><a href="https://medium.com/%40writetokrishna/preventing-db-failures-exponential-retries-with-jitter-34b86e23eda8">Preventing DB failures - Exponential retries with Jitter</a>
+by Krishnakumar Sathyanarayana</li>
+<li><a href="https://medium.com/yandex/good-retry-bad-retry-an-incident-story-648072d3cee6">Good Retry, Bad Retry: An Incident Story</a>
+by Denis Isaev, Yandex</li>
+</ul>
+
+                    </main>
+
+                    <nav class="nav-wrapper" aria-label="Page navigation">
+                        <!-- Mobile navigation buttons -->
+
+
+                        <div style="clear: both"></div>
+                    </nav>
+                </div>
+            </div>
+
+            <nav class="nav-wide-wrapper" aria-label="Page navigation">
+
+            </nav>
+
+        </div>
+
+
+
+
+        <script>
+            window.playground_copyable = true;
+        </script>
+
+
+        <script src="elasticlunr.min.js"></script>
+        <script src="mark.min.js"></script>
+        <script src="searcher.js"></script>
+
+        <script src="clipboard.min.js"></script>
+        <script src="highlight.js"></script>
+        <script src="book.js"></script>
+
+        <!-- Custom JS scripts -->
+
+        <script>
+        window.addEventListener('load', function() {
+            window.setTimeout(window.print, 100);
+        });
+        </script>
+
+
+    </div>
+    </body>
+</html>
