@@ -58,7 +58,7 @@ pub fn parse_arguments_from<I: IntoIterator<Item = T> + Copy, T: Into<OsString> 
 #[derive(Parser, Debug)]
 pub struct AttemptArguments {
     #[command(subcommand)]
-    pub strategy: BackoffStrategy,
+    pub schedule: BackoffSchedule,
 
     #[command(flatten)]
     pub wait_params: WaitParameters,
@@ -76,12 +76,12 @@ pub struct AttemptArguments {
     #[arg(long, short='R', global=true, value_parser=time_duration, value_name="DURATION")]
     pub expected_runtime: Option<f32>,
 
-    /// Print human-readable messages. Use -vv to show all messages. Don't write scripts against
-    /// this output, use exit codes.
+    /// Increase the amount of human-readable information printed out during processing.
+    /// Use -vv to show all messages. Don't write scripts against this output, use exit codes.
     #[arg(long, short, global = true, action=clap::ArgAction::Count)]
     pub verbose: u8,
-    /// Suppress human-readable messages. Use -qq to suppress all messages. (Errors in parsing
-    /// arguments will still be printed.)
+    /// Suppress human-readable messages. Use -qq to suppress all messages. Errors in parsing
+    /// arguments will still be printed.
     #[arg(long, short, global = true, action=clap::ArgAction::Count)]
     pub quiet: u8,
 
@@ -98,7 +98,7 @@ impl AttemptArguments {
     pub fn validate(&self) {
         // NB: The command here in the `clap` parlance - NOT the command we are
         // retrying.
-        if self.strategy.command().is_empty() {
+        if self.schedule.command().is_empty() {
             let mut clap_cmd = AttemptArguments::command();
             clap_cmd
                 .error(ErrorKind::InvalidValue, "No command specified.")
@@ -113,12 +113,12 @@ impl AttemptArguments {
                 )
                 .exit();
         }
-        if self.timeout.is_none() && self.expected_runtime.is_some() {
+        if self.timeout.is_none() && self.policy_params.retry_if_timeout {
             let mut clap_cmd = AttemptArguments::command();
             clap_cmd
                 .error(
                     ErrorKind::InvalidValue,
-                    "--expected-runtime requires --timeout.",
+                    "--retry-if-timeout requires --timeout.",
                 )
                 .exit();
         }
@@ -148,13 +148,13 @@ impl AttemptArguments {
     pub fn backoff(&self) -> BackoffIter {
         let unlimited_attempts = self.unlimited_attempts || self.forever;
         BackoffIter {
-            params: self.strategy.params(),
+            params: self.schedule.params(),
             attempts: unlimited_attempts.not().then_some(self.attempts),
             wait_params: self.wait_params,
         }
     }
     pub fn build_command(&self) -> Command {
-        let command = self.strategy.command();
+        let command = self.schedule.command();
         let mut c = Command::new(&command[0]);
         c.args(&command[1..]);
 
@@ -233,10 +233,10 @@ impl From<ImplicitSubcommandArguments> for AttemptArguments {
             forever,
             command,
         } = value;
-        let strategy = BackoffStrategy::Fixed { wait, command };
+        let schedule = BackoffSchedule::Fixed { wait, command };
 
         Self {
-            strategy,
+            schedule,
             wait_params,
             policy_params,
             attempts,
@@ -267,16 +267,18 @@ pub struct WaitParameters {
 }
 
 impl WaitParameters {
-    pub fn create_duration(&self, interval: f32) -> Duration {
+    pub fn wait_delay(&self, delay: f32) -> Duration {
         let jitter_seconds = match self.jitter {
-            Some(n) => Uniform::new_inclusive(-n / 2., n / 2.).sample(&mut rand::thread_rng()),
+            Some(n) => Uniform::new_inclusive(0.0, n).sample(&mut rand::thread_rng()),
             None => 0.0,
         };
-        Duration::from_secs_f32(
-            (interval + jitter_seconds)
-                .max(self.wait_min.unwrap_or(0.0))
-                .min(self.wait_max.unwrap_or(f32::MAX)),
-        )
+        let rounded_delay = delay
+            .max(self.wait_min.unwrap_or(0.0))
+            .min(self.wait_max.unwrap_or(f32::MAX));
+
+        // Never round our jitter value, or we will lose our randomness & synchronize with other clients
+        Duration::from_secs_f32(rounded_delay + jitter_seconds)
+    }
     pub fn stagger_delay(&self) -> Option<Duration> {
         if let Some(stagger) = self.stagger {
             let delay = Uniform::new_inclusive(0.0, stagger).sample(&mut rand::thread_rng());
@@ -430,7 +432,7 @@ impl PolicyParameters {
     subcommand_help_heading = "Backoff Strategies",
     disable_help_subcommand = true
 )]
-pub enum BackoffStrategy {
+pub enum BackoffSchedule {
     /// Wait a fixed amount of time between attempts (this is the default).
     Fixed {
         /// The amount of time to wait between attempts.
@@ -474,17 +476,17 @@ pub enum BackoffStrategy {
     },
 }
 
-impl BackoffStrategy {
+impl BackoffSchedule {
     fn params(&self) -> BackoffParameters {
         match self {
-            BackoffStrategy::Fixed { wait, .. } => BackoffParameters::Fixed { wait: *wait },
-            BackoffStrategy::Exponential {
+            BackoffSchedule::Fixed { wait, .. } => BackoffParameters::Fixed { wait: *wait },
+            BackoffSchedule::Exponential {
                 base, multiplier, ..
             } => BackoffParameters::Exponential {
                 base: *base,
                 multiplier: *multiplier,
             },
-            BackoffStrategy::Linear {
+            BackoffSchedule::Linear {
                 multiplier,
                 starting_wait,
                 ..
@@ -496,9 +498,9 @@ impl BackoffStrategy {
     }
     fn command(&self) -> &Vec<String> {
         match self {
-            BackoffStrategy::Fixed { command, .. } => command,
-            BackoffStrategy::Exponential { command, .. } => command,
-            BackoffStrategy::Linear { command, .. } => command,
+            BackoffSchedule::Fixed { command, .. } => command,
+            BackoffSchedule::Exponential { command, .. } => command,
+            BackoffSchedule::Linear { command, .. } => command,
         }
     }
 }
@@ -527,11 +529,10 @@ impl IntoIterator for BackoffIter {
                 if let Some(attempts) = self.attempts {
                     let last = attempts - 1;
                     Box::new(
-                        (0..attempts)
-                            .map(move |n| (self.wait_params.create_duration(wait), n >= last)),
+                        (0..attempts).map(move |n| (self.wait_params.wait_delay(wait), n >= last)),
                     )
                 } else {
-                    Box::new((0..).map(move |_| (self.wait_params.create_duration(wait), false)))
+                    Box::new((0..).map(move |_| (self.wait_params.wait_delay(wait), false)))
                 }
             }
             BackoffParameters::Exponential { base, multiplier } => {
@@ -540,14 +541,14 @@ impl IntoIterator for BackoffIter {
                     Box::new((0..attempts).map(move |n| {
                         (
                             self.wait_params
-                                .create_duration(multiplier * base.powi(n as i32)),
+                                .wait_delay(multiplier * base.powi(n as i32)),
                             n >= last,
                         )
                     }))
                 } else {
                     Box::new((0..).map(move |n| {
                         (
-                            self.wait_params.create_duration(multiplier * base.powi(n)),
+                            self.wait_params.wait_delay(multiplier * base.powi(n)),
                             false,
                         )
                     }))
@@ -562,7 +563,7 @@ impl IntoIterator for BackoffIter {
                     Box::new((0..attempts).map(move |n| {
                         (
                             self.wait_params
-                                .create_duration(multiplier * n as f32 + starting_wait),
+                                .wait_delay(multiplier * n as f32 + starting_wait),
                             n >= last,
                         )
                     }))
@@ -570,7 +571,7 @@ impl IntoIterator for BackoffIter {
                     Box::new((0..).map(move |n| {
                         (
                             self.wait_params
-                                .create_duration(multiplier * n as f32 + starting_wait),
+                                .wait_delay(multiplier * n as f32 + starting_wait),
                             false,
                         )
                     }))
@@ -587,7 +588,7 @@ mod test {
     #[test]
     fn fixed() {
         let fixed_args = AttemptArguments {
-            strategy: BackoffStrategy::Fixed {
+            schedule: BackoffSchedule::Fixed {
                 wait: 1.0,
                 command: vec![],
             },
@@ -605,7 +606,7 @@ mod test {
     #[test]
     fn fixed_with_jitter() {
         let fixed_args = AttemptArguments {
-            strategy: BackoffStrategy::Fixed {
+            schedule: BackoffSchedule::Fixed {
                 wait: 5.0,
                 command: vec![],
             },
@@ -629,7 +630,7 @@ mod test {
         let multiplier = 2.;
         let starting_wait = 1.;
         let linear_args = AttemptArguments {
-            strategy: BackoffStrategy::Linear {
+            schedule: BackoffSchedule::Linear {
                 multiplier,
                 starting_wait,
                 command: vec![],
@@ -659,7 +660,7 @@ mod test {
     fn exponential() {
         // Test base
         let exp_args = AttemptArguments {
-            strategy: BackoffStrategy::Exponential {
+            schedule: BackoffSchedule::Exponential {
                 base: 2.0,
                 multiplier: 1.0,
                 command: vec![],
@@ -679,7 +680,7 @@ mod test {
 
         // Test multiplier
         let exp_args = AttemptArguments {
-            strategy: BackoffStrategy::Exponential {
+            schedule: BackoffSchedule::Exponential {
                 base: 2.0,
                 multiplier: 2.0,
                 command: vec![],
@@ -701,7 +702,7 @@ mod test {
     #[test]
     fn exponential_with_jitter() {
         let exp_args = AttemptArguments {
-            strategy: BackoffStrategy::Exponential {
+            schedule: BackoffSchedule::Exponential {
                 base: 2.0,
                 multiplier: 1.0,
                 command: vec![],
@@ -726,7 +727,7 @@ mod test {
     #[test]
     fn fixed_is_default() {
         let fixed_args = AttemptArguments {
-            strategy: BackoffStrategy::Fixed {
+            schedule: BackoffSchedule::Fixed {
                 wait: 1.0,
                 command: vec![],
             },
@@ -767,7 +768,7 @@ mod test {
             wait_min: Some(5.0),
             ..Default::default()
         };
-        assert_eq!(params.create_duration(1.0), Duration::from_secs(5));
+        assert_eq!(params.wait_delay(1.0), Duration::from_secs(5));
     }
 
     #[test]
@@ -776,30 +777,53 @@ mod test {
             wait_max: Some(5.0),
             ..Default::default()
         };
-        assert_eq!(params.create_duration(10.0), Duration::from_secs(5));
+        assert_eq!(params.wait_delay(10.0), Duration::from_secs(5));
     }
 
     #[test]
     fn jitter() {
+        let epsilon = 1. / 128.; // approximately 0
+        let params = WaitParameters::default();
+        let outputs = (0..3).map(|_| params.wait_delay(10.0)).collect::<Vec<_>>();
+        // Because jitter is 0, all durations should be equal to 10.
+        assert!(outputs
+            .iter()
+            .all(|n| (n.as_secs_f32() - 10.0).abs() < epsilon));
+
         let params = WaitParameters {
             jitter: Some(1.0),
             ..Default::default()
         };
-        let outputs = (0..3)
-            .map(|_| params.create_duration(10.0))
-            .collect::<Vec<_>>();
-        assert!(outputs.iter().any(|n| n.as_secs_f32() != 10.0));
+        let outputs = (0..3).map(|_| params.wait_delay(10.0)).collect::<Vec<_>>();
+        assert!(outputs
+            .iter()
+            .any(|n| (n.as_secs_f32() - 10.0).abs() > epsilon));
         assert!(outputs
             .iter()
             .all(|n| n.as_secs_f32() >= 9.0 && n.as_secs_f32() <= 11.0));
     }
 
     #[test]
-    fn jitter_with_min_max() {
+    fn min_and_max_do_not_erase_jitter() {
         let params = WaitParameters {
             jitter: Some(5.0),
-            wait_min: Some(0.5),
-            wait_max: Some(3.0),
+            wait_min: Some(10.0),
+            wait_max: None,
+            ..Default::default()
+        };
+        let outputs = (0..3).map(|_| params.wait_delay(1.0)).collect::<Vec<_>>();
+        assert!(outputs.iter().any(|n| n.as_secs_f32() > 10.));
+
+        let params = WaitParameters {
+            jitter: Some(5.0),
+            wait_min: None,
+            wait_max: Some(0.),
+            ..Default::default()
+        };
+        let outputs = (0..3).map(|_| params.wait_delay(1.0)).collect::<Vec<_>>();
+        assert!(outputs.iter().any(|n| n.as_secs_f32() > 0.));
+    }
+
     #[test]
     fn stagger() {
         assert!(
@@ -812,10 +836,10 @@ mod test {
             ..Default::default()
         };
         let outputs = (0..3)
-            .map(|_| params.create_duration(1.0))
+            .map(|_| params.stagger_delay().unwrap())
             .collect::<Vec<_>>();
         assert!(outputs
             .iter()
-            .all(|n| n.as_secs_f32() >= 0.5 && n.as_secs_f32() <= 3.0));
+            .all(|n| n.as_secs_f32() >= 0.0 && n.as_secs_f32() <= 1.0));
     }
 }
