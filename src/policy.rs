@@ -1,6 +1,7 @@
 use std::{
     cell::OnceCell,
     io,
+    ops::ControlFlow,
     process::{self, Child, ExitStatus},
     str::from_utf8,
 };
@@ -242,7 +243,7 @@ impl PolicyParameters {
         mut child: Child,
         timed_out: bool,
         forever: bool,
-    ) -> Result<(bool, ExitStatus), io::Error> {
+    ) -> Result<(ControlFlow<()>, ExitStatus), io::Error> {
         trace!("Evaluating policy...");
 
         if self.default_behavior() {
@@ -250,10 +251,10 @@ impl PolicyParameters {
             debug!("Child has exited with {}.", status);
             if status.success() {
                 debug!("Stop: Command was successful.");
-                return Ok((false, status));
+                return Ok((ControlFlow::Break(()), status));
             } else {
                 debug!("Retry: Command failed.");
-                return Ok((true, status));
+                return Ok((ControlFlow::Continue(()), status));
             }
         }
 
@@ -271,7 +272,7 @@ impl PolicyParameters {
             },
             timed_out,
         ) {
-            return Ok((false, output.status));
+            return Ok((ControlFlow::Break(()), output.status));
         };
 
         if self.evaluate_retry_predicates(
@@ -281,12 +282,13 @@ impl PolicyParameters {
                 stderr: &stderr,
             },
             forever,
+            timed_out,
         ) {
-            return Ok((true, output.status));
+            return Ok((ControlFlow::Continue(()), output.status));
         };
 
-        debug!("Stop: Stopping by default.");
-        Ok((false, output.status))
+        debug!("Stop: No retry predicates were matched.");
+        Ok((ControlFlow::Break(()), output.status))
     }
 }
 

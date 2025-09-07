@@ -1,7 +1,7 @@
 use std::{
     ffi::OsString,
     io,
-    ops::Not,
+    ops::{ControlFlow, Not},
     process::{Child, Command, ExitStatus},
     time::Duration,
 };
@@ -164,7 +164,7 @@ impl AttemptArguments {
         &self,
         child: Child,
         timed_out: bool,
-    ) -> Result<(bool, ExitStatus), io::Error> {
+    ) -> Result<(ControlFlow<()>, ExitStatus), io::Error> {
         self.policy_params
             .evaluate_policy(child, timed_out, self.forever)
     }

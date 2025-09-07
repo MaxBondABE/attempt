@@ -4,10 +4,10 @@ mod arguments;
 mod policy;
 mod util;
 
-use std::{io, process, time::Duration};
+use std::{io, ops::ControlFlow, process, time::Duration};
 
 use arguments::{parse_arguments, AttemptArguments};
-use log::{debug, error, trace, warn};
+use log::{debug, error, info, trace, warn};
 use util::{logger::Logger, poll::poll_child};
 
 // NB: Must stay in sync with tests/util.rs
@@ -69,29 +69,33 @@ fn attempt(args: AttemptArguments) -> Result<Outcome, io::Error> {
         }
 
         let (retry, status) = args.evaluate_policy(child, timed_out)?;
-        if !retry {
-            if status.success() {
-                debug!("Terminated: Success.");
-                return Ok(Outcome::Success);
-            } else {
-                debug!("Terminated: Command has failed, but cannot be retried.");
-                return Ok(Outcome::Stopped);
+        match retry {
+            ControlFlow::Break(()) => {
+                if status.success() {
+                    debug!("Terminated: Success.");
+                    return Ok(Outcome::Success);
+                } else {
+                    debug!("Terminated: Command has failed, but cannot be retried.");
+                    return Ok(Outcome::Stopped);
+                }
             }
-        } else if !last {
-            // Only sleep if we have at least 1 more attempt; otherwise, we would
-            // waste time. If we're going to fail, we should fail as fast as possible.
-            if duration >= Duration::from_secs(1) {
-                debug!(
-                    "Command has failed, retrying in {:.2} seconds...",
-                    duration.as_secs_f32()
-                )
-            } else {
-                debug!(
-                    "Command has failed, retrying in {} milliseconds...",
-                    duration.as_millis()
-                )
+            ControlFlow::Continue(()) if !last => {
+                // Only sleep if we have at least 1 more attempt; if we're going to fail,
+                // we should fail as fast as possible.
+                if duration >= Duration::from_secs(1) {
+                    debug!(
+                        "Command has failed, retrying in {:.2} seconds...",
+                        duration.as_secs_f32()
+                    )
+                } else {
+                    debug!(
+                        "Command has failed, retrying in {} milliseconds...",
+                        duration.as_millis()
+                    )
+                }
+                sleep(duration);
             }
-            sleep(duration);
+            _ => (),
         }
     }
 
