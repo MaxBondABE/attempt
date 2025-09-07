@@ -34,18 +34,22 @@ pub fn poll_child<P: Pollable>(
     #[cfg(not(test))]
     use std::time::Instant;
 
-    if let Some(expected) = expected_runtime {
-        // Use a fixed delay strategy until the expected runtime is exhausted
+    let start = Instant::now();
+
+    if let Some(expected) = expected_runtime.map(|rt| rt.min(timeout)) {
+        // Use a fixed delay schedule until the expected runtime is exhausted
         // We want to poll during this time in case the child returns early
         // (eg if it crashes), but we want to poll slowly to minimize overhead.
-        let minutes = (expected.as_secs_f32() / FIXED_DELAY).floor();
-        if minutes < 1. {
+        // We don't check timeouts until the after this block, so we can't wait longer
+        // than that.
+        let fixed_delays = (expected.as_secs_f32() / FIXED_DELAY).floor();
+        if fixed_delays < 1. {
             if pollable.poll()? {
                 return Ok(true);
             }
             sleep(expected);
         } else {
-            for _ in 0..(minutes as usize) {
+            for _ in 0..(fixed_delays as usize) {
                 if pollable.poll()? {
                     return Ok(true);
                 }
@@ -55,15 +59,19 @@ pub fn poll_child<P: Pollable>(
             if pollable.poll()? {
                 return Ok(true);
             }
-            let slept = Duration::from_secs_f32(FIXED_DELAY * minutes);
-            if let Some(remaining) = expected.checked_sub(slept) {
+            if let Some(remaining) = expected.checked_sub(start.elapsed()).and_then(|r| {
+                if r > Duration::ZERO {
+                    Some(r)
+                } else {
+                    None
+                }
+            }) {
                 sleep(remaining);
             }
         }
     }
 
-    // Use an exponential delay strategy
-    let start = Instant::now();
+    // Use an exponential delay schedule
     let mut i: i32 = 0;
     loop {
         if pollable.poll()? {
@@ -75,7 +83,9 @@ pub fn poll_child<P: Pollable>(
                     .min(EXP_MAX_DELAY)
                     .min(remaining.as_secs_f32()),
             )
-            .unwrap_or(Duration::from_secs_f32(EXP_MAX_DELAY));
+            .unwrap_or(Duration::from_secs_f32(
+                EXP_MAX_DELAY.min(remaining.as_secs_f32()),
+            ));
             // This try_from/unwrap_or protects us from NaN, inf, etc.
 
             sleep(delay);
@@ -109,6 +119,18 @@ mod test {
         }
     }
 
+    struct SucceedAfterDuration(MockInstant, Duration);
+    impl SucceedAfterDuration {
+        pub fn new(duration: Duration) -> Self {
+            Self(MockInstant::now(), duration)
+        }
+    }
+    impl Pollable for SucceedAfterDuration {
+        fn poll(&mut self) -> Result<bool, io::Error> {
+            Ok(self.0.elapsed() >= self.1)
+        }
+    }
+
     #[test]
     fn poll_returns_immediately_if_result_is_ready() {
         let token = MockSleep::start();
@@ -138,12 +160,11 @@ mod test {
         let (poll_delays, _) = MockSleep::take(token);
         assert_eq!(poll_delays.into_iter().sum::<Duration>(), expected);
 
-        let expected = Duration::from_secs(2);
         let token = MockSleep::start();
         poll_child(
             &mut PollableFalse,
             Duration::from_secs(1),
-            Some(Duration::from_secs(1)),
+            Some(Duration::from_secs_f32(0.5)),
         )
         .unwrap();
 
@@ -185,8 +206,66 @@ mod test {
     }
 
     #[test]
-    fn expected_runtime_is_respected() {
-        let expected = Duration::from_secs(1);
+    fn expected_runtime_less_than_1m() {
+        // If the expected runtime is less than 1m, we should wait for that period of time
+        let token = MockSleep::start();
+
+        poll_child(
+            &mut PollableFalse,
+            Duration::from_secs(2),
+            Some(Duration::from_secs(1)),
+        )
+        .unwrap();
+
+        let (poll_delays, _) = MockSleep::take(token);
+        assert_eq!(poll_delays.first(), Some(&Duration::from_secs(1)));
+        assert_eq!(
+            poll_delays.into_iter().sum::<Duration>(),
+            Duration::from_secs(2)
+        );
+    }
+
+    #[test]
+    fn expected_runtime_greater_than_1m() {
+        // If the expected runtime is > 1m, we should wait in 1m increments
+        let token = MockSleep::start();
+        let expected_delay = Duration::from_secs(60);
+        let expected_minutes = 5;
+
+        poll_child(
+            &mut SucceedAfterDuration::new(Duration::from_secs(expected_minutes * 60)),
+            Duration::from_secs(1200),
+            Some(Duration::from_secs(600)),
+        )
+        .unwrap();
+
+        let (poll_delays, _) = MockSleep::take(token);
+        assert_eq!(poll_delays.len(), expected_minutes as usize);
+        for (i, delay) in poll_delays.into_iter().enumerate() {
+            assert_eq!(delay, expected_delay, "Delay {i} has the wrong duration")
+        }
+    }
+
+    #[test]
+    fn expected_runtime_not_multiple_of_1m() {
+        // We should wait in 1m increments, and then whatever the remainder is
+        let token = MockSleep::start();
+
+        poll_child(
+            &mut PollableFalse,
+            Duration::from_secs(120),
+            Some(Duration::from_secs(90)),
+        )
+        .unwrap();
+
+        let (poll_delays, _) = MockSleep::take(token);
+        assert_eq!(poll_delays[0], Duration::from_secs(60));
+        assert_eq!(poll_delays[1], Duration::from_secs(30));
+    }
+
+    #[test]
+    fn timeout_overrides_expected_runtime() {
+        let expected = Duration::from_secs(0);
         let token = MockSleep::start();
 
         poll_child(&mut PollableFalse, Duration::ZERO, Some(expected)).unwrap();
