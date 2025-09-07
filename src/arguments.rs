@@ -7,6 +7,7 @@ use std::{
 };
 
 use clap::{error::ErrorKind, Args, CommandFactory, Parser, Subcommand};
+use log::warn;
 use rand_distr::{Distribution, Uniform};
 use regex::Regex;
 
@@ -120,6 +121,28 @@ impl AttemptArguments {
                     "--expected-runtime requires --timeout.",
                 )
                 .exit();
+        }
+        if let Some(max) = self.wait_params.wait_max {
+            if let Some(min) = self.wait_params.wait_min {
+                if min > max {
+                    let mut clap_cmd = AttemptArguments::command();
+                    clap_cmd
+                        .error(
+                            ErrorKind::InvalidValue,
+                            "--wait-min cannot be greater than --wait-max.",
+                        )
+                        .exit();
+                }
+            }
+        }
+        if let Some(timeout) = self.timeout {
+            if let Some(runtime) = self.expected_runtime {
+                if timeout < runtime {
+                    warn!(
+                        "Timeout of {timeout:.2}s is less than the expected runtime of {runtime:.2}s. {timeout:.2}s will be used as the expected runtime.",
+                    );
+                }
+            }
         }
     }
     pub fn backoff(&self) -> BackoffIter {
