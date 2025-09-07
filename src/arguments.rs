@@ -229,6 +229,9 @@ impl From<ImplicitSubcommandArguments> for AttemptArguments {
 
 #[derive(Args, Debug, Clone, Copy, Default)]
 pub struct WaitParameters {
+    /// Inject a random delay at the start of execution
+    #[arg(long, global = true, value_parser=time_duration, value_name="DURATION")]
+    pub stagger: Option<f32>,
     /// Add random jitter to the wait time, in the interval [-n/2, n/2].
     #[arg(long, short, global = true, value_parser=f32_gte_0, value_name="SECONDS")]
     pub jitter: Option<f32>,
@@ -251,6 +254,13 @@ impl WaitParameters {
                 .max(self.wait_min.unwrap_or(0.0))
                 .min(self.wait_max.unwrap_or(f32::MAX)),
         )
+    pub fn stagger_delay(&self) -> Option<Duration> {
+        if let Some(stagger) = self.stagger {
+            let delay = Uniform::new_inclusive(0.0, stagger).sample(&mut rand::thread_rng());
+            Some(Duration::from_secs_f32(delay))
+        } else {
+            None
+        }
     }
 }
 
@@ -732,6 +742,16 @@ mod test {
             jitter: Some(5.0),
             wait_min: Some(0.5),
             wait_max: Some(3.0),
+    #[test]
+    fn stagger() {
+        assert!(
+            WaitParameters::default().stagger_delay().is_none(),
+            "Staggering should not be enabled by default."
+        );
+
+        let params = WaitParameters {
+            stagger: Some(1.0),
+            ..Default::default()
         };
         let outputs = (0..3)
             .map(|_| params.create_duration(1.0))

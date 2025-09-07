@@ -40,6 +40,11 @@ fn attempt(args: AttemptArguments) -> Result<Outcome, io::Error> {
     #[cfg(test)]
     use util::testing::fake_sleep_for_attempt as sleep;
 
+    if let Some(delay) = args.wait_params.stagger_delay() {
+        info!("Staggering by {:.2} seconds", delay.as_secs_f32());
+        sleep(delay)
+    }
+
     for (duration, last) in args.backoff() {
         trace!("Starting new attempt...");
 

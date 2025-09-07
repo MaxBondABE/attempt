@@ -188,3 +188,19 @@ fn command_failed() {
     cmd.timeout(TEST_TIMEOUT);
     cmd.assert().code(predicate::eq(STOPPED));
 }
+
+#[test]
+fn staggering() {
+    const STAGGER: f32 = 1.0;
+
+    fn with_stagger() -> f32 {
+        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        cmd.arg("--stagger").arg(STAGGER.to_string());
+        cmd.arg("/bin/true");
+
+        cmd.timeout(TEST_TIMEOUT + Duration::from_secs_f32(STAGGER));
+        let start = Instant::now();
+        cmd.assert().success();
+
+        start.elapsed().as_secs_f32()
+    }
