@@ -1,9 +1,10 @@
 use log::{LevelFilter, Log, SetLoggerError};
 
-/// Minimal logger implementation, implementing the verbosity/quietness arguments.
-/// Checking the verbosity argument before every print was cumbersone. The available
-/// crates implementing simple loggers prepended the log level before printing message,
-/// and this couldn't be disabled.
+/// Minimal logger implementation with verbosity/quietness arguments.
+/// Checking the verbosity argument before every print was cumbersone so I decided to
+/// automate this with `log`. The available crates implementing simple loggers prepended
+/// the log level before printing message, and this couldn't be disabled. I found this undesirable
+/// so I wrote this implementation.
 pub struct Logger {
     filter: LevelFilter,
 }
