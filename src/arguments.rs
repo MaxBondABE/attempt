@@ -12,8 +12,8 @@ use rand_distr::{Distribution, Uniform};
 use regex::Regex;
 
 use crate::util::{
-    value_parsing::{f32_gte_0, usize_gte_1},
     pattern::CodePattern,
+    value_parsing::{f32_gte_0, time_duration, usize_gte_1},
 };
 
 /// Hack to get a "default" subcommand to work. See ImplicitSubcommandArguments.
@@ -69,11 +69,11 @@ pub struct AttemptArguments {
     #[arg(long, short, default_value_t = 3, global = true, value_parser=usize_gte_1)]
     pub attempts: usize,
     /// Timeout for an individual attempt of the command.
-    #[arg(long, short = 't', global = true, value_parser=f32_gte_0, value_name="SECONDS")]
+    #[arg(long, short = 't', global = true, value_parser=time_duration, value_name="DURATION")]
     pub timeout: Option<f32>,
-    /// The amount of time the command is expected to take, in seconds. This will not be
-    /// counted against it's timeout.
-    #[arg(long, short='R', global=true, value_parser=f32_gte_0, value_name="SECONDS")]
+    /// The amount of time the command is expected to take. The child command is
+    /// polled less aggressively during this time to save resources.
+    #[arg(long, short='R', global=true, value_parser=time_duration, value_name="DURATION")]
     pub expected_runtime: Option<f32>,
 
     /// Print human-readable messages. Use -vv to show all messages. Don't write scripts against
@@ -200,9 +200,9 @@ pub struct ImplicitSubcommandArguments {
 
     #[arg(long, short, default_value_t = 3, global = true, value_parser=usize_gte_1)]
     pub attempts: usize,
-    #[arg(long, short = 't', global = true, value_parser=f32_gte_0, value_name="SECONDS")]
+    #[arg(long, short = 't', global = true, value_parser=time_duration)]
     pub timeout: Option<f32>,
-    #[arg(long, short='R', global=true, value_parser=f32_gte_0, value_name="SECONDS")]
+    #[arg(long, short='R', global=true, value_parser=time_duration)]
     pub expected_runtime: Option<f32>,
 
     #[arg(long, short, global = true, action=clap::ArgAction::Count)]
@@ -255,14 +255,14 @@ pub struct WaitParameters {
     /// Inject a random delay at the start of execution
     #[arg(long, global = true, value_parser=time_duration, value_name="DURATION")]
     pub stagger: Option<f32>,
-    /// Add random jitter to the wait time, in the interval [-n/2, n/2].
-    #[arg(long, short, global = true, value_parser=f32_gte_0, value_name="SECONDS")]
+    /// Add random jitter to the wait time, in the interval [0, n/2].
+    #[arg(long, short, global = true, value_parser=time_duration, value_name="DURATION")]
     pub jitter: Option<f32>,
     /// The minimum amount of time to wait between attempts.
-    #[arg(long, short = 'm', global = true, value_parser=f32_gte_0, value_name="SECONDS")]
+    #[arg(long, short = 'm', global = true, value_parser=time_duration, value_name="DURATION")]
     pub wait_min: Option<f32>,
     /// The maximum amount of time to wait between attempts.
-    #[arg(long, short = 'M', global = true, value_parser=f32_gte_0, value_name="SECONDS")]
+    #[arg(long, short = 'M', global = true, value_parser=time_duration, value_name="DURATION")]
     pub wait_max: Option<f32>,
 }
 
@@ -435,7 +435,7 @@ pub enum BackoffStrategy {
     Fixed {
         /// The amount of time to wait between attempts.
         // NB: Keep in sync with duplicate in ImplicitSubcommandArguments
-        #[arg(long, short, default_value_t = 1.0, value_parser=f32_gte_0)]
+        #[arg(long, short, default_value_t = 1.0, value_parser=time_duration, value_name="DURATION")]
         wait: f32,
 
         /// The command to be attempted. Using `--` to disambiguate arguments between `attempt` and
@@ -450,7 +450,7 @@ pub enum BackoffStrategy {
     Exponential {
         #[arg(long, short, default_value_t = 2.0, value_parser=f32_gte_0)]
         base: f32,
-        #[arg(long, default_value_t = 1.0, short = 'x', value_parser=f32_gte_0)]
+        #[arg(long, default_value_t = 1.0, short = 'x', value_parser=time_duration, value_name="DURATION")]
         multiplier: f32,
 
         /// The command to be attempted. Using `--` to disambiguate arguments between `attempt` and
@@ -464,7 +464,7 @@ pub enum BackoffStrategy {
     Linear {
         #[arg(long, default_value_t = 1.0, short = 'x', value_parser=f32_gte_0)]
         multiplier: f32,
-        #[arg(long, short='W', default_value_t = 1.0, value_parser=f32_gte_0)]
+        #[arg(long, short='w', default_value_t = 1.0, value_parser=time_duration, value_name="DURATION")]
         starting_wait: f32,
 
         /// The command to be attempted. Using `--` to disambiguate arguments between `attempt` and
