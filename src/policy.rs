@@ -15,6 +15,7 @@ use std::os::unix::process::ExitStatusExt;
 
 const STRING_ERR_MSG: &str = "Failed to parse command output as UTF-8.";
 
+/// Trait that decouples access to `std::process::Output` to allow mocking in tests
 pub trait OutputShim {
     fn status_code(&self) -> Option<i32>;
     fn stdout(&self) -> &str;
@@ -57,7 +58,7 @@ impl PolicyParameters {
 
         // Status code & signal control
         if self.stop_if_timeout & timed_out {
-            debug!("Stop: Timeout.");
+            debug!("Stop: Command timed out.");
             return true;
         }
 
@@ -248,7 +249,7 @@ impl PolicyParameters {
 
         if self.default_behavior() {
             let status = child.wait()?;
-            debug!("Child has exited with {}.", status);
+            debug!("Command exited: {}.", status);
             if status.success() {
                 debug!("Stop: Command was successful.");
                 return Ok((ControlFlow::Break(()), status));
@@ -261,7 +262,7 @@ impl PolicyParameters {
         let output = child.wait_with_output()?;
         let stdout: OnceCell<&str> = OnceCell::new();
         let stderr: OnceCell<&str> = OnceCell::new();
-        debug!("Command exited with status: {}.", output.status);
+        debug!("Command exited: {}.", output.status);
 
         // NB: Stop predicates have precedence over retry predicates
         if self.evaluate_stop_predicates(
@@ -295,7 +296,7 @@ impl PolicyParameters {
 #[cfg(test)]
 mod test {
     use super::*;
-    use crate::util::status::StatusCodePattern;
+    use crate::util::pattern::CodePattern;
     use regex::Regex;
 
     struct Successful;
