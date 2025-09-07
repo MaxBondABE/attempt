@@ -1,10 +1,17 @@
-use std::time::Instant;
+use std::{
+    thread::{self, JoinHandle},
+    time::{Duration, Instant},
+};
 
 use assert_cmd::Command;
 use predicates::prelude::*;
-use util::{assert_average_percent_error, IO_ERROR, RETRIES_EXHAUSTED, STOPPED, TEST_TIMEOUT};
 
-mod util;
+// NB: Must stay in sync with src/main.rs
+pub const IO_ERROR: i32 = 1;
+pub const RETRIES_EXHAUSTED: i32 = 3;
+pub const STOPPED: i32 = 4;
+
+pub const TEST_TIMEOUT: Duration = Duration::from_secs(1);
 
 // NB: `cmd` is a command in the parlance of `assert_cmd` - it refers to
 // `attempt` itself, not to it's child command
@@ -150,9 +157,8 @@ fn timeouts_are_respected() {
                 .arg("-c")
                 .arg("while [ 1 ]; do sleep 0.1; done");
             // FIXME for unclear reasons, something like `sleep 5` doesn't return
-            // until the sleep is over, despite being killed. Even with --force-kill.
-            // When I test manually I don't reproduce. Using a loop is a workaround.
-            // See below.
+            // until the sleep is over, despite being killed. When I test manually
+            // I don't reproduce. Using a loop is a workaround. See below.
             //
             // > time cargo --quiet run -- --attempts 1 --timeout 0.5 -- /bin/sh -c "sleep 5"
             //   real	0m0.581s
@@ -249,7 +255,9 @@ fn staggering() {
     assert_average_percent_error(|| sample_timing_difference(8), STAGGER / 2., 30.);
 }
 
-
+/// Assert the unsigned percentage error of a measurement given by func. Attempts to tolerate
+/// up to 2 outlier measurements by generating 5 datapoints and discarding the 2 with the highest
+/// absolute deviation.
 #[cfg(unix)]
 #[test]
 fn retry_on_signal() {
@@ -276,3 +284,38 @@ fn stop_on_signal() {
     cmd.assert().code(predicate::eq(STOPPED));
 }
 
+pub fn unsigned_percent_error(measured: f32, expected: f32) -> f32 {
+    100. * (measured - expected).abs() / expected
+}
+
+pub fn assert_percent_error(measured: f32, expected: f32, threshold: f32) {
+    let pct_err = unsigned_percent_error(measured, expected);
+    if pct_err >= threshold {
+        panic!(
+            "Error is too high (measured {}% threshold {}%)",
+            pct_err, threshold
+        );
+    }
+}
+
+
+pub fn assert_average_percent_error<F: Fn() -> f32>(func: F, expected: f32, threshold: f32) {
+    let mut samples: [f32; 5] = Default::default();
+    for (i, v) in [func(), func(), func(), func(), func()]
+        .into_iter()
+        .enumerate()
+    {
+        if !v.is_finite() {
+            panic!("invalid sample ({})", v)
+        };
+        samples[i] = v;
+    }
+
+    let avg = samples.into_iter().sum::<f32>() / 5.;
+    // Sort samples by variance
+    samples.sort_by_key(|s| ((s - avg).abs() * 1_000_000.).round().min(u64::MAX as f32) as u64);
+    // Take only the top 3, discarding the 2 measurements with highest variance
+    let measured = samples.into_iter().take(3).sum::<f32>() / 3.;
+
+    assert_percent_error(measured, expected, threshold)
+}
