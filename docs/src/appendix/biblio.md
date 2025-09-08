@@ -46,16 +46,14 @@ contexts. Tenacity has also created a large library of utilities and extensive d
 
 # References
 
-- [Retry and backoff pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/retry-backoff.html)
-  from AWS Prescriptive Guidance
+- [The Synchronization of Periodic Routing Messages](https://dl.acm.org/doi/pdf/10.1145/166237.166241)
+  by Sally Floyd and Van Jacobsen, Lawrence Berkeley Laboratory
 - [Exponential backoff and jitter](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/)
   by Marc Brooker, AWS
 - [Transient fault handling](https://learn.microsoft.com/en-us/azure/architecture/best-practices/transient-faults)
   from Azure Architecture Center
 - [Retry pattern](https://learn.microsoft.com/en-us/azure/architecture/patterns/retry) from Azure
   Architecture Center
-- [The Synchronization of Periodic Routing Messages](https://dl.acm.org/doi/pdf/10.1145/166237.166241)
-  by Sally Floyd and Van Jacobsen, Lawrence Berkeley Laboratory
 
 # Case studies
 
