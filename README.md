@@ -36,9 +36,10 @@ attempt exponential --retry-if-contains "server not ready" sqlx migrate
 
 ## Documentation
 
-- Read the [usage instructions](docs/usage.md) to get a quick start
-- The [scripting guide](docs/scripting.md) has advice about using attempt in scripts
-- Run `attempt --help` for full documentation
+- See the [usage instructions](https://maxbondabe.github.io/attempt/usage.html) to get a quick start
+- The [scripting guide](https://maxbondabe.github.io/attempt/appendix/scripting.html) has advice about using attempt in scripts
+- Read the [user manual](https://maxbondabe.github.io/attempt/intro.html) for full documentation
+- Run `attempt --help` for quick access to documentation
     - Note that you need to specify a strategy to see it's parameters,
         eg `attempt exponential --help`
 
@@ -53,4 +54,3 @@ attempt exponential --retry-if-contains "server not ready" sqlx migrate
 # Installation
 
 TBD
-
