@@ -197,6 +197,8 @@ fn command_failed() {
 
 #[test]
 fn staggering() {
+    // FIXME this test is flaky, sometimes the child threads die inside timing_difference()
+
     const STAGGER: f32 = 1.0;
     let samples: usize = 8; // MUST be even
     let expected = STAGGER / 2.; // Expected value of a uniform distribution
