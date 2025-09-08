@@ -41,5 +41,3 @@ Output predicates can create performance issues. Try to use status predicates wh
 
 If you must use an output predicate, use the specific `stdout` or `stderr` variant. The generic
 variants are provided for convenience, but are not as performant.
-
-## Write child processes to fail fast

@@ -465,7 +465,7 @@ pub enum BackoffSchedule {
     /// Wait linearly longer between attempts, using the formula
     /// <multiplier> * <attempts> + <starting_wait>.
     Linear {
-        #[arg(long, default_value_t = 1.0, short = 'x', value_parser=f32_gte_0)]
+        #[arg(long, default_value_t = 1.0, short = 'x', value_parser=time_duration, value_name="DURATION")]
         multiplier: f32,
         #[arg(long, short='w', default_value_t = 1.0, value_parser=time_duration, value_name="DURATION")]
         starting_wait: f32,

@@ -27,5 +27,4 @@
 
 - [Exit codes](appendix/exit_codes.md)
 - [Advice for scripting](appendix/scripting.md)
-- [Using `attempt` as a parent process](appendix/parent.md)
 - [Bibliography](appendix/biblio.md)

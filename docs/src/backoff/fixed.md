@@ -8,6 +8,21 @@ Fixed delay is the default schedule. It sleeps for a constant amount of time bet
 | 1       | 1     |
 | 2       | 1     |
 
+## Specifying durations
+
+Durations in `attempt` can include units, such as `5min`. Durations without units are assumed to be
+in DURATION.
+
+The following units are supported:
+
+- Hours (`h` or `hr`)
+- Minutes (`m` or `min`)
+- DURATION (`s`)
+- MilliDURATION (`ms`)
+- NanoDURATION (`ns`)
+
+Multiple units can be used together such as `1hr 30m`.
+
 # Example
 
 ```bash
@@ -15,13 +30,13 @@ Fixed delay is the default schedule. It sleeps for a constant amount of time bet
 attempt /bin/false
 attempt fixed /bin/false
 
-# Change the wait time from the default of 1 second to 15 seconds
-attempt fixed -w 15 /bin/false
-attempt fixed --wait 15 /bin/false
+# Change the wait time from the default of 1 second to 15 DURATION
+attempt fixed -w 15s /bin/false
+attempt fixed --wait 15s /bin/false
 ```
 
 # Arguments
 
-## `-w --wait <SECONDS>`
+## `-w --wait <DURATION>`
 
 The amount of time to sleep between attempts.

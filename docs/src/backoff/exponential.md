@@ -12,15 +12,30 @@ Wait exponentially more time between attempts, using the following formula:
 
 The attempt counter starts at 0, so the first wait is is for `<multiplier>` seconds.
 
+## Specifying durations
+
+Durations in `attempt` can include units, such as `5min`. Durations without units are assumed to be
+in seconds.
+
+The following units are supported:
+
+- Hours (`h` or `hr`)
+- Minutes (`m` or `min`)
+- Seconds (`s`)
+- Milliseconds (`ms`)
+- Nanoseconds (`ns`)
+
+Multiple units can be used together such as `1hr 30m`.
+
 # Example
 
 ```bash
 attempt exponential /bin/false
 attempt exp /bin/false
 
-# Change the multiplier from the default of 1 to 2
-attempt exponential -x 2 /bin/false
-attempt exponential --multiplier 2 /bin/false
+# Change the multiplier from the default of 1s to 2s
+attempt exponential -x 2s /bin/false
+attempt exponential --multiplier 2s /bin/false
 
 # Change the exponential base from the default of 2 to 5
 attempt exponential -b 5 /bin/false
