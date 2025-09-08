@@ -198,13 +198,15 @@ fn command_failed() {
 #[test]
 fn staggering() {
     const STAGGER: f32 = 1.0;
+    let samples: usize = 8; // MUST be even
+    let expected = STAGGER / 2.; // Expected value of a uniform distribution
 
     fn with_stagger() -> f32 {
         let mut cmd = Command::cargo_bin("attempt").unwrap();
         cmd.arg("--stagger").arg(STAGGER.to_string());
         cmd.arg("/bin/true");
 
-        cmd.timeout(TEST_TIMEOUT + Duration::from_secs_f32(STAGGER));
+        cmd.timeout(TEST_TIMEOUT);
         let start = Instant::now();
         cmd.assert().success();
 
@@ -223,8 +225,10 @@ fn staggering() {
     }
 
     fn timing_difference(i: usize) -> f32 {
-        // By taking both measurements concurrently, we negate errors caused by
-        // varying load on the system over the course of a test
+        // - Take both measurments concurrently to mitigate effects by system load
+        // - Swap between which is started first to cancel out effects caused by which
+        //   is started first
+        //   - This only works if the number of samples is even
         if (i & 1) == 0 {
             let with = thread::spawn(with_stagger);
             let without = thread::spawn(without_stagger);
@@ -248,11 +252,7 @@ fn staggering() {
         total / n as f32
     }
 
-    // - The timing difference should be a function of STAGGER
-    // - Because the expectation of a uniform distribution is it's middle, many
-    //   samples of the timing difference should converge to half of STAGGER
-    // - Otherwise, there is a bug (or bad luck - adjust the sensitivity accordingly)
-    assert_average_percent_error(|| sample_timing_difference(8), STAGGER / 2., 30.);
+    assert_average_percent_error(|| sample_timing_difference(samples), expected, 30.);
 }
 
 #[cfg(unix)]
