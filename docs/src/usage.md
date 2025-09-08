@@ -56,31 +56,31 @@ attempt --attempts 10 /bin/false
 
 ```bash
 # Add 1 second of random jitter to wait time
-attempt -j 1 /bin/false
-attempt --jitter 1 /bin/false
+attempt -j 1s /bin/false
+attempt --jitter 1s /bin/false
 ```
 
 ## Setting a minimum or maximum wait time
 
 ```bash
 # Set a minimum wait time of 5 seconds between attempts
-attempt -m 5 /bin/false
-attempt --wait-min 5 /bin/false
+attempt -m 5s /bin/false
+attempt --wait-min 5s /bin/false
 
-# Set a maximum wait time of 30 seconds between attempts
-attempt -M 30 exponential /bin/false
-attempt --wait-max 30 exponential /bin/false
+# Set a maximum wait time of 15 minutes between attempts
+attempt -M 15m exponential /bin/false
+attempt --wait-max 15m exponential /bin/false
 
 # Combine min and max wait times
-attempt -m 2 -M 10 exponential /bin/false
+attempt -m 5s -M 15m exponential /bin/false
 ```
 
 ## Setting a timeout on child command runtime
 
 ```bash
 # Kill the child command if it runs longer than 30 seconds
-attempt -t 30 -- sleep 60
-attempt --timeout 30 -- sleep 60
+attempt -t 30s -- sleep 60
+attempt --timeout 30s -- sleep 60
 ```
 
 ## Retrying on status codes
