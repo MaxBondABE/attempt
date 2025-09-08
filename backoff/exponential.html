@@ -185,13 +185,25 @@
 </tbody></table>
 </div>
 <p>The attempt counter starts at 0, so the first wait is is for <code>&lt;multiplier&gt;</code> seconds.</p>
+<h2 id="specifying-durations"><a class="header" href="#specifying-durations">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in seconds.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>Seconds (<code>s</code>)</li>
+<li>Milliseconds (<code>ms</code>)</li>
+<li>Nanoseconds (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example"><a class="header" href="#example">Example</a></h1>
 <pre><code class="language-bash">attempt exponential /bin/false
 attempt exp /bin/false
 
-# Change the multiplier from the default of 1 to 2
-attempt exponential -x 2 /bin/false
-attempt exponential --multiplier 2 /bin/false
+# Change the multiplier from the default of 1s to 2s
+attempt exponential -x 2s /bin/false
+attempt exponential --multiplier 2s /bin/false
 
 # Change the exponential base from the default of 2 to 5
 attempt exponential -b 5 /bin/false

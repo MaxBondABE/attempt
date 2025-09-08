@@ -387,17 +387,29 @@ delay but to fall back to a long delay if the outage proves persistent.</p>
 <tr><td>2</td><td>1</td></tr>
 </tbody></table>
 </div>
+<h2 id="specifying-durations"><a class="header" href="#specifying-durations">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in DURATION.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>DURATION (<code>s</code>)</li>
+<li>MilliDURATION (<code>ms</code>)</li>
+<li>NanoDURATION (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example"><a class="header" href="#example">Example</a></h1>
 <pre><code class="language-bash"># Because it is the default, specifying `fixed` is optional
 attempt /bin/false
 attempt fixed /bin/false
 
-# Change the wait time from the default of 1 second to 15 seconds
-attempt fixed -w 15 /bin/false
-attempt fixed --wait 15 /bin/false
+# Change the wait time from the default of 1 second to 15 DURATION
+attempt fixed -w 15s /bin/false
+attempt fixed --wait 15s /bin/false
 </code></pre>
 <h1 id="arguments"><a class="header" href="#arguments">Arguments</a></h1>
-<h2 id="-w---wait-seconds"><a class="header" href="#-w---wait-seconds"><code>-w --wait &lt;SECONDS&gt;</code></a></h2>
+<h2 id="-w---wait-duration"><a class="header" href="#-w---wait-duration"><code>-w --wait &lt;DURATION&gt;</code></a></h2>
 <p>The amount of time to sleep between attempts.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="exponential-schedule"><a class="header" href="#exponential-schedule">Exponential schedule</a></h1>
 <p>Wait exponentially more time between attempts, using the following formula:</p>
@@ -409,13 +421,25 @@ attempt fixed --wait 15 /bin/false
 </tbody></table>
 </div>
 <p>The attempt counter starts at 0, so the first wait is is for <code>&lt;multiplier&gt;</code> seconds.</p>
+<h2 id="specifying-durations-1"><a class="header" href="#specifying-durations-1">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in seconds.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>Seconds (<code>s</code>)</li>
+<li>Milliseconds (<code>ms</code>)</li>
+<li>Nanoseconds (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example-1"><a class="header" href="#example-1">Example</a></h1>
 <pre><code class="language-bash">attempt exponential /bin/false
 attempt exp /bin/false
 
-# Change the multiplier from the default of 1 to 2
-attempt exponential -x 2 /bin/false
-attempt exponential --multiplier 2 /bin/false
+# Change the multiplier from the default of 1s to 2s
+attempt exponential -x 2s /bin/false
+attempt exponential --multiplier 2s /bin/false
 
 # Change the exponential base from the default of 2 to 5
 attempt exponential -b 5 /bin/false
@@ -436,6 +460,18 @@ between attempts.</p>
 <tr><td>2</td><td>3</td></tr>
 </tbody></table>
 </div>
+<h2 id="specifying-durations-2"><a class="header" href="#specifying-durations-2">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in DURATION.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>DURATION (<code>s</code>)</li>
+<li>MilliDURATION (<code>ms</code>)</li>
+<li>NanoDURATION (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example-2"><a class="header" href="#example-2">Example</a></h1>
 <pre><code class="language-bash">attempt linear /bin/false
 
@@ -444,13 +480,13 @@ attempt linear -x 2 /bin/false
 attempt linear --multiplier 2 /bin/false
 
 # Change the starting wait from the default of 1 to 5
-attempt linear -W 5 /bin/false
-attempt linear --starting-wait 5 /bin/false
+attempt linear -W 5s /bin/false
+attempt linear --starting-wait 5s /bin/false
 </code></pre>
 <h1 id="arguments-2"><a class="header" href="#arguments-2">Arguments</a></h1>
-<h2 id="-w---starting-wait-starting_wait"><a class="header" href="#-w---starting-wait-starting_wait"><code>-w --starting-wait &lt;STARTING_WAIT&gt;</code></a></h2>
+<h2 id="-w---starting-wait-duration"><a class="header" href="#-w---starting-wait-duration"><code>-w --starting-wait &lt;DURATION&gt;</code></a></h2>
 <p>The number of seconds to wait after the first attempts.</p>
-<h2 id="-x---multiplier-multiplier"><a class="header" href="#-x---multiplier-multiplier"><code>-x --multiplier &lt;MULTIPLIER&gt;</code></a></h2>
+<h2 id="-x---multiplier-duration"><a class="header" href="#-x---multiplier-duration"><code>-x --multiplier &lt;DURATION&gt;</code></a></h2>
 <p>The number of additional seconds to wait after each subsequent request.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="policy-controls"><a class="header" href="#policy-controls">Policy controls</a></h1>
 <p>Policy controls define the conditions under whether <code>attempt</code> decides to retry or stop retrying a
@@ -599,26 +635,51 @@ terminate processes. If you use <code>--stop-if-killed</code>, you don't need to
 <div style="break-before: page; page-break-before: always;"></div><h1 id="timing-controls"><a class="header" href="#timing-controls">Timing controls</a></h1>
 <p>Timing controls adjust how <code>attempt</code> manages time-related aspects of command retries. They determine
 the delays between attempts and the time limits for each attempt.</p>
-<p>This chapter describes options for wait modification, including jitter and stagger, as well as
-timeout configuration. These controls help balance retry responsiveness and resource usage.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="wait-control"><a class="header" href="#wait-control">Wait control</a></h1>
-<h2 id="-j---jitter-seconds"><a class="header" href="#-j---jitter-seconds"><code>-j --jitter &lt;SECONDS&gt;</code></a></h2>
+<h2 id="specifying-durations-3"><a class="header" href="#specifying-durations-3">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in seconds.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>Seconds (<code>s</code>)</li>
+<li>Milliseconds (<code>ms</code>)</li>
+<li>Nanoseconds (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
+<h2 id="-j---jitter-duration"><a class="header" href="#-j---jitter-duration"><code>-j --jitter &lt;DURATION&gt;</code></a></h2>
 <p>For a jitter value of <code>n</code>, adds a value in the interval <code>[0, n]</code> to the delay time. This is useful
 for preventing "thundering herd" issues. Jitter is always added last, so even if the delay was
 rounded by <code>--wait-min/--wait-max</code>, it will still be randomized.</p>
-<h2 id="-m---wait-min-seconds"><a class="header" href="#-m---wait-min-seconds"><code>-m --wait-min &lt;SECONDS&gt;</code></a></h2>
+<h2 id="-m---wait-min-duration"><a class="header" href="#-m---wait-min-duration"><code>-m --wait-min &lt;DURATION&gt;</code></a></h2>
 <p>Round any delay smaller than the specified minimum up to that minimum.</p>
-<h2 id="-m---wait-max-seconds"><a class="header" href="#-m---wait-max-seconds"><code>-M --wait-max &lt;SECONDS&gt;</code></a></h2>
+<h2 id="-m---wait-max-duration"><a class="header" href="#-m---wait-max-duration"><code>-M --wait-max &lt;DURATION&gt;</code></a></h2>
 <p>Round any delay larger than the specified maximum up to that maximum. This is useful when using the
 linear or exponential strategies, to ensure that you do not sleep for an unbounded amount of time.</p>
+<h2 id="--stagger-duration"><a class="header" href="#--stagger-duration"><code>--stagger &lt;DURATION&gt;</code></a></h2>
+<p>Stagger the delay by a random amount in the interval <code>[0, n]</code>. This is useful for desyncronizing
+multiple concurrent instances of <code>attempt</code> which start at the same time.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="timeout-control"><a class="header" href="#timeout-control">Timeout control</a></h1>
-<h2 id="-t---timeout-seconds"><a class="header" href="#-t---timeout-seconds"><code>-t --timeout &lt;SECONDS&gt;</code></a></h2>
+<h2 id="specifying-durations-4"><a class="header" href="#specifying-durations-4">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in seconds.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>Seconds (<code>s</code>)</li>
+<li>Milliseconds (<code>ms</code>)</li>
+<li>Nanoseconds (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
+<h2 id="-t---timeout-duration"><a class="header" href="#-t---timeout-duration"><code>-t --timeout &lt;DURATION&gt;</code></a></h2>
 <p>Kill the child command if it does not complete within the timeout. This prevents <code>attempt</code> from
 waiting indefinitely on a child that may never exit. For instance, the child could be stuck in an
 infinite loop.</p>
 <p>The child is polled using an exponential backoff with a base of 2 and a multiplier of 10ms,
 saturating at a maximum delay of 15s.</p>
-<h2 id="-r---expected-runtime-seconds"><a class="header" href="#-r---expected-runtime-seconds"><code>-R --expected-runtime &lt;SECONDS&gt;</code></a></h2>
+<h2 id="-r---expected-runtime-duration"><a class="header" href="#-r---expected-runtime-duration"><code>-R --expected-runtime &lt;DURATION&gt;</code></a></h2>
 <p>Specify how much time the command is expected to take. The child command will be polled slowly
 during this time (once per minute).</p>
 <p>This is useful to reduce load on the system. An assumption made in the design of the timeout feature
@@ -672,135 +733,6 @@ lock, or similar issue. Set the</p>
 <p>Output predicates can create performance issues. Try to use status predicates whenever possible.</p>
 <p>If you must use an output predicate, use the specific <code>stdout</code> or <code>stderr</code> variant. The generic
 variants are provided for convenience, but are not as performant.</p>
-<h2 id="write-child-processes-to-fail-fast"><a class="header" href="#write-child-processes-to-fail-fast">Write child processes to fail fast</a></h2>
-<div style="break-before: page; page-break-before: always;"></div><p>attempt/docs/src/appendix/parent.md</p>
-<h1 id="using-attempt-as-a-parent-process"><a class="header" href="#using-attempt-as-a-parent-process">Using attempt as a parent process</a></h1>
-<p><code>attempt</code> is primarily a CLI retry tool, but many people want to use it as a simple
-parent/supervisor for short-lived services or to restart a process inside a container. The following
-guidance covers the most important considerations and recommended patterns when running <code>attempt</code> as
-a parent process.</p>
-<h2 id="what-attempt-is-and-isnt"><a class="header" href="#what-attempt-is-and-isnt">What <code>attempt</code> is (and isn't)</a></h2>
-<ul>
-<li><code>attempt</code> is a retry wrapper: it runs a child command, observes its exit status and output
-according to predicates, and optionally retries with a configurable backoff.</li>
-<li>It is not a full init system or process supervisor. It does not attempt to implement all PID1
-responsibilities (signal handling, reaping complicated process trees, service metadata, graceful
-shutdown orchestration, etc.). If you need a robust init/supervisor, prefer dedicated tools
-(systemd, runit, s6, supervisord) or a tiny init for containers (like <code>tini</code> or <code>dumb-init</code>) and
-use <code>attempt</code> for restart/retry behavior when appropriate.</li>
-</ul>
-<h2 id="signals--shutdown"><a class="header" href="#signals--shutdown">Signals &amp; shutdown</a></h2>
-<ul>
-<li>If your environment relies on signal forwarding (for example, your container runtime sends SIGTERM
-to PID 1), be aware that <code>attempt</code> may not forward every signal exactly like a dedicated init
-would. If proper signal forwarding and reaping is required, run <code>attempt</code> under a minimal init
-such as <code>tini</code> rather than as PID 1 directly.</li>
-<li>Use <code>--stop-if-killed</code> to avoid retrying when the child is killed by a signal; otherwise <code>attempt</code>
-may consider the child retryable. Note that <code>--stop-if-timeout</code> implies that a timed-out child
-(which is killed by the timeout mechanism) will not be retried.</li>
-<li>If you rely on <code>--timeout</code>, <code>attempt</code> will kill the child when the timeout expires. Use
-<code>--stop-if-timeout</code> if you want that situation to stop further retries.</li>
-</ul>
-<h2 id="long-running-services"><a class="header" href="#long-running-services">Long-running services</a></h2>
-<ul>
-<li>For long-running services you want to restart if they crash, use:
-<ul>
-<li><code>--forever</code> (restart regardless of success/failure), or</li>
-<li><code>-U/--unlimited-attempts</code> with an appropriate retry predicate.</li>
-</ul>
-</li>
-<li>Example: keep a service running, restarting on any crash:</li>
-</ul>
-<pre><code class="language-docs/usage.md#L1-20">attempt --forever /usr/local/bin/myservice --serve
-</code></pre>
-<ul>
-<li>If you want some backoff between restarts, configure a backoff strategy. A gentle exponential with
-jitter helps avoid rapid restart loops and thundering-herd problems.</li>
-</ul>
-<h2 id="recommended-strategy-settings-for-parent-like-use"><a class="header" href="#recommended-strategy-settings-for-parent-like-use">Recommended strategy settings for parent-like use</a></h2>
-<ul>
-<li>Use exponential backoff with a sensible multiplier and a maximum wait time to avoid unbounded
-sleeps:</li>
-</ul>
-<pre><code class="language-docs/usage.md#L1-20">attempt exponential --multiplier 2 --base 2 --wait-max 900 --jitter 5 --forever /usr/local/bin/myservice
-</code></pre>
-<ul>
-<li>Add <code>--jitter</code> to avoid synchronized retries when many instances are managed externally.</li>
-<li>Use <code>--stagger</code> if you launch many <code>attempt</code> parents at once (for example, from an orchestrator)
-to randomize initial starts.</li>
-</ul>
-<h2 id="timeouts--expected-runtime"><a class="header" href="#timeouts--expected-runtime">Timeouts &amp; expected-runtime</a></h2>
-<ul>
-<li>Always set <code>--timeout</code> for commands that might hang or deadlock. Without a timeout you risk
-<code>attempt</code> waiting indefinitely on a hung child.</li>
-<li>Use <code>--expected-runtime</code> to tell <code>attempt</code> how long a normal run should take; during that period
-it will poll the child less aggressively (reducing system load). This is useful for services that
-perform occasional long-running initialization.</li>
-</ul>
-<h2 id="predicates--performance"><a class="header" href="#predicates--performance">Predicates &amp; performance</a></h2>
-<ul>
-<li>Prefer status code predicates (like <code>--retry-if-status</code>) over output predicates
-(<code>--retry-if-contains</code>, <code>--retry-if-matches</code>) because output predicates require capturing and
-scanning stdout/stderr and may cause performance issues for verbose processes.</li>
-<li>If you must inspect output, prefer the specific <code>--retry-if-stdout-*</code> or <code>--retry-if-stderr-*</code>
-variants rather than the generic versions.</li>
-<li>Remember that "stop" predicates take precedence over "retry" predicates. Use <code>--stop-if-*</code> to
-abort retries for unrecoverable situations.</li>
-</ul>
-<h2 id="exit-codes-for-supervising-processes"><a class="header" href="#exit-codes-for-supervising-processes">Exit codes (for supervising processes)</a></h2>
-<p><code>attempt</code> uses stable exit codes your supervisor or orchestration tooling can rely on. The important
-ones:</p>
-<ul>
-<li><code>0</code> — child eventually ran successfully within allowed retries</li>
-<li><code>1</code> — I/O error (e.g. command not found)</li>
-<li><code>2</code> — invalid arguments (bad invocation)</li>
-<li><code>3</code> — retries exhausted without success</li>
-<li><code>4</code> — stopped early because a "stop" predicate triggered</li>
-<li><code>101</code> — internal crash (e.g. encountering non-UTF-8 when using output predicates)</li>
-</ul>
-<p>Use these exit codes to distinguish between transient failures (which may be retriable by the
-supervisor) and configuration or internal errors that merit operator attention.</p>
-<h2 id="when-used-in-containers"><a class="header" href="#when-used-in-containers">When used in containers</a></h2>
-<ul>
-<li>Do not use <code>attempt</code> as a drop-in PID 1 if you need proper signal handling or reaping. Instead:
-<ul>
-<li>Run a tiny init (e.g. <code>tini</code>) as PID 1 and run <code>attempt</code> as a child under that init; or</li>
-<li>Use your container orchestration restart features and rely on <code>attempt</code> only for retry/backoff
-logic inside the container if you understand its limits.</li>
-</ul>
-</li>
-<li>Example with a minimal init:</li>
-</ul>
-<pre><code class="language-docs/usage.md#L1-20">tini -- attempt --forever --stagger 5 --jitter 3 /usr/local/bin/myservice --serve
-</code></pre>
-<h2 id="practical-examples"><a class="header" href="#practical-examples">Practical examples</a></h2>
-<ul>
-<li>Restart a service on crash, but give it 1s, 2s, 4s between restarts with jitter and a max wait:</li>
-</ul>
-<pre><code class="language-docs/usage.md#L1-20">attempt exponential --multiplier 1 --base 2 --wait-max 60 --jitter 2 --forever /usr/local/bin/myservice
-</code></pre>
-<ul>
-<li>Start multiple small workers at once but avoid thundering herd at boot:</li>
-</ul>
-<pre><code class="language-docs/usage.md#L1-20">attempt --stagger 10 --jitter 3 --forever /usr/local/bin/worker --do-work
-</code></pre>
-<ul>
-<li>Restart only on certain exit codes (useful when your program uses specific codes to signal
-"temporary" failures):</li>
-</ul>
-<pre><code class="language-docs/usage.md#L1-20">attempt --retry-if-status 100..199 --forever /usr/local/bin/task-runner
-</code></pre>
-<h2 id="summary-checklist"><a class="header" href="#summary-checklist">Summary checklist</a></h2>
-<ul>
-<li>If you need robust init semantics, use a real init and run <code>attempt</code> under it.</li>
-<li>Use <code>--forever</code> or <code>-U</code> for restart-as-parent behavior.</li>
-<li>Configure backoff, jitter, and wait max to avoid hot loops and thundering-herd issues.</li>
-<li>Set <code>--timeout</code> and <code>--expected-runtime</code> to avoid hangs and reduce polling load.</li>
-<li>Prefer status predicates over output predicates for performance.</li>
-<li>Use exit codes to inform your higher-level supervisor about why <code>attempt</code> exited.</li>
-</ul>
-<p>If you want, I can add a short example <code>Dockerfile</code> or a tiny <code>systemd</code> unit showing a recommended
-invocation for a container or service manager.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="bibliography"><a class="header" href="#bibliography">Bibliography</a></h1>
 <p>This bibliography presents works for the following uses:</p>
 <ul>

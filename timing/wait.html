@@ -176,15 +176,30 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="wait-control"><a class="header" href="#wait-control">Wait control</a></h1>
-<h2 id="-j---jitter-seconds"><a class="header" href="#-j---jitter-seconds"><code>-j --jitter &lt;SECONDS&gt;</code></a></h2>
+<h2 id="specifying-durations"><a class="header" href="#specifying-durations">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in seconds.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>Seconds (<code>s</code>)</li>
+<li>Milliseconds (<code>ms</code>)</li>
+<li>Nanoseconds (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
+<h2 id="-j---jitter-duration"><a class="header" href="#-j---jitter-duration"><code>-j --jitter &lt;DURATION&gt;</code></a></h2>
 <p>For a jitter value of <code>n</code>, adds a value in the interval <code>[0, n]</code> to the delay time. This is useful
 for preventing "thundering herd" issues. Jitter is always added last, so even if the delay was
 rounded by <code>--wait-min/--wait-max</code>, it will still be randomized.</p>
-<h2 id="-m---wait-min-seconds"><a class="header" href="#-m---wait-min-seconds"><code>-m --wait-min &lt;SECONDS&gt;</code></a></h2>
+<h2 id="-m---wait-min-duration"><a class="header" href="#-m---wait-min-duration"><code>-m --wait-min &lt;DURATION&gt;</code></a></h2>
 <p>Round any delay smaller than the specified minimum up to that minimum.</p>
-<h2 id="-m---wait-max-seconds"><a class="header" href="#-m---wait-max-seconds"><code>-M --wait-max &lt;SECONDS&gt;</code></a></h2>
+<h2 id="-m---wait-max-duration"><a class="header" href="#-m---wait-max-duration"><code>-M --wait-max &lt;DURATION&gt;</code></a></h2>
 <p>Round any delay larger than the specified maximum up to that maximum. This is useful when using the
 linear or exponential strategies, to ensure that you do not sleep for an unbounded amount of time.</p>
+<h2 id="--stagger-duration"><a class="header" href="#--stagger-duration"><code>--stagger &lt;DURATION&gt;</code></a></h2>
+<p>Stagger the delay by a random amount in the interval <code>[0, n]</code>. This is useful for desyncronizing
+multiple concurrent instances of <code>attempt</code> which start at the same time.</p>
 
                     </main>
 

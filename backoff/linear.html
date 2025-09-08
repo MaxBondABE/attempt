@@ -184,6 +184,18 @@
 <tr><td>2</td><td>3</td></tr>
 </tbody></table>
 </div>
+<h2 id="specifying-durations"><a class="header" href="#specifying-durations">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in DURATION.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>DURATION (<code>s</code>)</li>
+<li>MilliDURATION (<code>ms</code>)</li>
+<li>NanoDURATION (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example"><a class="header" href="#example">Example</a></h1>
 <pre><code class="language-bash">attempt linear /bin/false
 
@@ -192,13 +204,13 @@ attempt linear -x 2 /bin/false
 attempt linear --multiplier 2 /bin/false
 
 # Change the starting wait from the default of 1 to 5
-attempt linear -W 5 /bin/false
-attempt linear --starting-wait 5 /bin/false
+attempt linear -W 5s /bin/false
+attempt linear --starting-wait 5s /bin/false
 </code></pre>
 <h1 id="arguments"><a class="header" href="#arguments">Arguments</a></h1>
-<h2 id="-w---starting-wait-starting_wait"><a class="header" href="#-w---starting-wait-starting_wait"><code>-w --starting-wait &lt;STARTING_WAIT&gt;</code></a></h2>
+<h2 id="-w---starting-wait-duration"><a class="header" href="#-w---starting-wait-duration"><code>-w --starting-wait &lt;DURATION&gt;</code></a></h2>
 <p>The number of seconds to wait after the first attempts.</p>
-<h2 id="-x---multiplier-multiplier"><a class="header" href="#-x---multiplier-multiplier"><code>-x --multiplier &lt;MULTIPLIER&gt;</code></a></h2>
+<h2 id="-x---multiplier-duration"><a class="header" href="#-x---multiplier-duration"><code>-x --multiplier &lt;DURATION&gt;</code></a></h2>
 <p>The number of additional seconds to wait after each subsequent request.</p>
 
                     </main>

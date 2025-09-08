@@ -183,17 +183,29 @@
 <tr><td>2</td><td>1</td></tr>
 </tbody></table>
 </div>
+<h2 id="specifying-durations"><a class="header" href="#specifying-durations">Specifying durations</a></h2>
+<p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
+in DURATION.</p>
+<p>The following units are supported:</p>
+<ul>
+<li>Hours (<code>h</code> or <code>hr</code>)</li>
+<li>Minutes (<code>m</code> or <code>min</code>)</li>
+<li>DURATION (<code>s</code>)</li>
+<li>MilliDURATION (<code>ms</code>)</li>
+<li>NanoDURATION (<code>ns</code>)</li>
+</ul>
+<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example"><a class="header" href="#example">Example</a></h1>
 <pre><code class="language-bash"># Because it is the default, specifying `fixed` is optional
 attempt /bin/false
 attempt fixed /bin/false
 
-# Change the wait time from the default of 1 second to 15 seconds
-attempt fixed -w 15 /bin/false
-attempt fixed --wait 15 /bin/false
+# Change the wait time from the default of 1 second to 15 DURATION
+attempt fixed -w 15s /bin/false
+attempt fixed --wait 15s /bin/false
 </code></pre>
 <h1 id="arguments"><a class="header" href="#arguments">Arguments</a></h1>
-<h2 id="-w---wait-seconds"><a class="header" href="#-w---wait-seconds"><code>-w --wait &lt;SECONDS&gt;</code></a></h2>
+<h2 id="-w---wait-duration"><a class="header" href="#-w---wait-duration"><code>-w --wait &lt;DURATION&gt;</code></a></h2>
 <p>The amount of time to sleep between attempts.</p>
 
                     </main>
