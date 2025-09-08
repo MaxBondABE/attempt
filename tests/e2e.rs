@@ -255,9 +255,6 @@ fn staggering() {
     assert_average_percent_error(|| sample_timing_difference(8), STAGGER / 2., 30.);
 }
 
-/// Assert the unsigned percentage error of a measurement given by func. Attempts to tolerate
-/// up to 2 outlier measurements by generating 5 datapoints and discarding the 2 with the highest
-/// absolute deviation.
 #[cfg(unix)]
 #[test]
 fn retry_on_signal() {
@@ -298,6 +295,9 @@ pub fn assert_percent_error(measured: f32, expected: f32, threshold: f32) {
     }
 }
 
+/// Assert the unsigned percentage error of a measurement given by func. Attempts to tolerate
+/// up to 2 outlier measurements by generating 5 datapoints and discarding the 2 with the highest
+/// absolute deviation.
 pub fn assert_average_percent_error<F: Fn() -> f32>(func: F, expected: f32, threshold: f32) {
     let mut samples: [f32; 5] = Default::default();
     for (i, v) in [func(), func(), func(), func(), func()]
