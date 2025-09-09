@@ -1,48 +1,48 @@
-# Timeout & signal control
+# Timeout & signal predicates
 
-Signal and timeout predicates control how `attempt` handles commands that are terminated by signals
-or exceed time limits. These predicates are particularly useful for managing long-running processes
-and handling system-level interruptions.
+## Signal patterns
 
-## Understanding signals and timeouts
+Some signal predicates attempt to match the signal number against a pattern supplied in the
+argument. The syntax for patterns is as follows.
 
-When a process is killed by a signal (such as SIGTERM, SIGKILL, or SIGINT), it does not exit with a
-normal status code. Instead, the process is terminated externally. Timeouts in `attempt` work by
-sending signals to child processes that exceed their time limit.
+- Individual codes: `1`
+- Inclusive ranges: `1..5`
+- Combinations of patterns: `1,2,3,10..15`
+- Whitespace is allowed: `1, 2, 3`
+- Note that valid status codes are in the range [0, 255]
 
 ## Retry predicates
 
-### `--stop-if-killed`
+### `--retry-if-timeout`
 
-Retry the command if it was killed by a signal. This includes timeouts, since timeouts use signals
-to terminate processes.
+Stop retrying if the command was killed specifically due to a timeout. This requires that the
+`--timeout` option is also specified.
+
+### `--retry-if-killed`
+
+Retry if the command was killed by any signal. Note this implies `--retry-if-timeout`, because
+timeouts use signals to terminate processes.
+
+### `--retry-if-signal <PATTERN>`
+
+Retrying if the command was killed by any signal matching the given pattern.
+
+This is only available on Unix systems.
 
 ## Stop predicates
-
-### `--stop-if-killed`
-
-Stop retrying if the command was killed by any signal. This includes timeouts, since timeouts use
-signals to terminate processes.
-
-When this option is enabled, any command that is terminated by a signal will not be retried,
-regardless of what caused the signal.
 
 ### `--stop-if-timeout`
 
 Stop retrying if the command was killed specifically due to a timeout. This requires that the
 `--timeout` option is also specified.
 
-This is more specific than `--stop-if-killed` - it only prevents retries when the termination was
-caused by `attempt`'s timeout mechanism, not other signals.
+### `--stop-if-killed`
 
-## Default behavior
+Stop retrying if the command was killed by any signal. Note this implies `--stop-if-timeout`,
+because timeouts use signals to terminate processes.
 
-By default, `attempt` will retry commands that are killed by signals, treating them the same as
-commands that exit with non-zero status codes. This behavior can be changed using the predicates
-above.
+### `--stop-if-signal <PATTERN>`
 
-## Relationship between predicates
+Stop retrying if the command was killed by any signal matching the given pattern.
 
-Note that `--stop-if-killed` implies `--stop-if-timeout`, since timeouts work by sending signals to
-terminate processes. If you use `--stop-if-killed`, you don't need to also specify
-`--stop-if-timeout`.
+This is only available on Unix systems.
