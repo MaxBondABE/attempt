@@ -96,7 +96,7 @@ pub struct AttemptArguments {
 
 impl AttemptArguments {
     pub fn validate(&self) {
-        // NB: The command here in the `clap` parlance - NOT the command we are
+        // NB: clap_cmd here a command in the `clap` parlance - NOT the command we are
         // retrying.
         if self.schedule.command().is_empty() {
             let mut clap_cmd = AttemptArguments::command();
@@ -429,8 +429,8 @@ impl PolicyParameters {
 
 #[derive(Subcommand, Clone, Debug)]
 #[command(
-    subcommand_value_name = "STRATEGY",
-    subcommand_help_heading = "Backoff Strategies",
+    subcommand_value_name = "BACKOFF",
+    subcommand_help_heading = "Backoff schedules",
     disable_help_subcommand = true
 )]
 pub enum BackoffSchedule {

@@ -5,7 +5,7 @@ attempt - a CLI for retrying fallible commands
 
 # How do I use it?
 
-`attempt [STRATEGY] [OPTIONS] [COMMAND]...`
+`attempt [BACKOFF] [OPTIONS] [COMMAND]...`
 
 ```bash
 # Rerun database migrations if the server was not ready
