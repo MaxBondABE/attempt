@@ -1,3 +1,3 @@
 # Installation
 
-TBD
+`cargo install attempt-cli`

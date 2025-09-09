@@ -53,4 +53,4 @@ attempt exponential --retry-if-contains "server not ready" sqlx migrate
 
 # Installation
 
-TBD
+`cargo install attempt-cli`
