@@ -394,9 +394,9 @@ in DURATION.</p>
 <ul>
 <li>Hours (<code>h</code> or <code>hr</code>)</li>
 <li>Minutes (<code>m</code> or <code>min</code>)</li>
-<li>DURATION (<code>s</code>)</li>
-<li>MilliDURATION (<code>ms</code>)</li>
-<li>NanoDURATION (<code>ns</code>)</li>
+<li>Seconds (<code>s</code>)</li>
+<li>Milliseconds (<code>ms</code>)</li>
+<li>Nanoseconds (<code>ns</code>)</li>
 </ul>
 <p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example"><a class="header" href="#example">Example</a></h1>
@@ -467,9 +467,9 @@ in DURATION.</p>
 <ul>
 <li>Hours (<code>h</code> or <code>hr</code>)</li>
 <li>Minutes (<code>m</code> or <code>min</code>)</li>
-<li>DURATION (<code>s</code>)</li>
-<li>MilliDURATION (<code>ms</code>)</li>
-<li>NanoDURATION (<code>ns</code>)</li>
+<li>Seconds (<code>s</code>)</li>
+<li>Milliseconds (<code>ms</code>)</li>
+<li>Nanoseconds (<code>ns</code>)</li>
 </ul>
 <p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example-2"><a class="header" href="#example-2">Example</a></h1>
@@ -601,37 +601,37 @@ specific predicates (eg <code>--retry-if-stdout-contains</code> vs <code>--retry
 <p>Stop retrying if stderr contains the specified string.</p>
 <h3 id="--stop-if-stderr-matches-regex"><a class="header" href="#--stop-if-stderr-matches-regex"><code>--stop-if-stderr-matches &lt;REGEX&gt;</code></a></h3>
 <p>Stop retrying if stderr matches the specified regular expression.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="timeout--signal-control"><a class="header" href="#timeout--signal-control">Timeout &amp; signal control</a></h1>
-<p>Signal and timeout predicates control how <code>attempt</code> handles commands that are terminated by signals
-or exceed time limits. These predicates are particularly useful for managing long-running processes
-and handling system-level interruptions.</p>
-<h2 id="understanding-signals-and-timeouts"><a class="header" href="#understanding-signals-and-timeouts">Understanding signals and timeouts</a></h2>
-<p>When a process is killed by a signal (such as SIGTERM, SIGKILL, or SIGINT), it does not exit with a
-normal status code. Instead, the process is terminated externally. Timeouts in <code>attempt</code> work by
-sending signals to child processes that exceed their time limit.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="timeout--signal-predicates"><a class="header" href="#timeout--signal-predicates">Timeout &amp; signal predicates</a></h1>
+<h2 id="signal-patterns"><a class="header" href="#signal-patterns">Signal patterns</a></h2>
+<p>Some signal predicates attempt to match the signal number against a pattern supplied in the
+argument. The syntax for patterns is as follows.</p>
+<ul>
+<li>Individual codes: <code>1</code></li>
+<li>Inclusive ranges: <code>1..5</code></li>
+<li>Combinations of patterns: <code>1,2,3,10..15</code></li>
+<li>Whitespace is allowed: <code>1, 2, 3</code></li>
+<li>Note that valid status codes are in the range [0, 255]</li>
+</ul>
 <h2 id="retry-predicates-2"><a class="header" href="#retry-predicates-2">Retry predicates</a></h2>
-<h3 id="--stop-if-killed"><a class="header" href="#--stop-if-killed"><code>--stop-if-killed</code></a></h3>
-<p>Retry the command if it was killed by a signal. This includes timeouts, since timeouts use signals
-to terminate processes.</p>
+<h3 id="--retry-if-timeout"><a class="header" href="#--retry-if-timeout"><code>--retry-if-timeout</code></a></h3>
+<p>Stop retrying if the command was killed specifically due to a timeout. This requires that the
+<code>--timeout</code> option is also specified.</p>
+<h3 id="--retry-if-killed"><a class="header" href="#--retry-if-killed"><code>--retry-if-killed</code></a></h3>
+<p>Retry if the command was killed by any signal. Note this implies <code>--retry-if-timeout</code>, because
+timeouts use signals to terminate processes.</p>
+<h3 id="--retry-if-signal-pattern"><a class="header" href="#--retry-if-signal-pattern"><code>--retry-if-signal &lt;PATTERN&gt;</code></a></h3>
+<p>Retrying if the command was killed by any signal matching the given pattern.</p>
+<p>This is only available on Unix systems.</p>
 <h2 id="stop-predicates-2"><a class="header" href="#stop-predicates-2">Stop predicates</a></h2>
-<h3 id="--stop-if-killed-1"><a class="header" href="#--stop-if-killed-1"><code>--stop-if-killed</code></a></h3>
-<p>Stop retrying if the command was killed by any signal. This includes timeouts, since timeouts use
-signals to terminate processes.</p>
-<p>When this option is enabled, any command that is terminated by a signal will not be retried,
-regardless of what caused the signal.</p>
 <h3 id="--stop-if-timeout"><a class="header" href="#--stop-if-timeout"><code>--stop-if-timeout</code></a></h3>
 <p>Stop retrying if the command was killed specifically due to a timeout. This requires that the
 <code>--timeout</code> option is also specified.</p>
-<p>This is more specific than <code>--stop-if-killed</code> - it only prevents retries when the termination was
-caused by <code>attempt</code>'s timeout mechanism, not other signals.</p>
-<h2 id="default-behavior"><a class="header" href="#default-behavior">Default behavior</a></h2>
-<p>By default, <code>attempt</code> will retry commands that are killed by signals, treating them the same as
-commands that exit with non-zero status codes. This behavior can be changed using the predicates
-above.</p>
-<h2 id="relationship-between-predicates"><a class="header" href="#relationship-between-predicates">Relationship between predicates</a></h2>
-<p>Note that <code>--stop-if-killed</code> implies <code>--stop-if-timeout</code>, since timeouts work by sending signals to
-terminate processes. If you use <code>--stop-if-killed</code>, you don't need to also specify
-<code>--stop-if-timeout</code>.</p>
+<h3 id="--stop-if-killed"><a class="header" href="#--stop-if-killed"><code>--stop-if-killed</code></a></h3>
+<p>Stop retrying if the command was killed by any signal. Note this implies <code>--stop-if-timeout</code>,
+because timeouts use signals to terminate processes.</p>
+<h3 id="--stop-if-signal-pattern"><a class="header" href="#--stop-if-signal-pattern"><code>--stop-if-signal &lt;PATTERN&gt;</code></a></h3>
+<p>Stop retrying if the command was killed by any signal matching the given pattern.</p>
+<p>This is only available on Unix systems.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="timing-controls"><a class="header" href="#timing-controls">Timing controls</a></h1>
 <p>Timing controls adjust how <code>attempt</code> manages time-related aspects of command retries. They determine
 the delays between attempts and the time limits for each attempt.</p>
@@ -685,7 +685,7 @@ during this time (once per minute).</p>
 <p>This is useful to reduce load on the system. An assumption made in the design of the timeout feature
 that most commands exit quickly, so the child is polled fairly aggressively. This may adversely
 impact performance for some use cases.</p>
-<h2 id="--retry-if-timeout"><a class="header" href="#--retry-if-timeout"><code>--retry-if-timeout</code></a></h2>
+<h2 id="--retry-if-timeout-1"><a class="header" href="#--retry-if-timeout-1"><code>--retry-if-timeout</code></a></h2>
 <p>Stop the command if it was killed by a signal. This includes timeouts, since timeouts use signals to
 terminate processes.</p>
 <h2 id="--stop-if-timeout-1"><a class="header" href="#--stop-if-timeout-1"><code>--stop-if-timeout</code></a></h2>
