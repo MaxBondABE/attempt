@@ -17,9 +17,9 @@ The following units are supported:
 
 - Hours (`h` or `hr`)
 - Minutes (`m` or `min`)
-- DURATION (`s`)
-- MilliDURATION (`ms`)
-- NanoDURATION (`ns`)
+- Seconds (`s`)
+- Milliseconds (`ms`)
+- Nanoseconds (`ns`)
 
 Multiple units can be used together such as `1hr 30m`.
 
