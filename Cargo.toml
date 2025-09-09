@@ -6,6 +6,7 @@ license = "Unlicense"
 description = "A CLI for retrying fallible commands"
 homepage = "https://github.com/MaxBondABE/attempt"
 repository = "https://github.com/MaxBondABE/attempt"
+documentation = "https://maxbondabe.github.io/attempt/"
 readme = "README.md"
 keywords = ["retry", "retrying"]
 
