@@ -368,7 +368,7 @@ attempt --stop-if-stderr-contains "Authentication failed" secure_command
 attempt --forever --wait 0 long_running_service
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
-<p>TBD</p>
+<p><code>cargo install attempt-cli</code></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="backoff-schedule-1"><a class="header" href="#backoff-schedule-1">Backoff schedule</a></h1>
 <p>The backoff schedule determines how long we wait between successive attempts. The simplest schedule
 is a fixed delay, where we wait the same amount of time between all attempts. But it's often a good
