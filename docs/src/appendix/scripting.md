@@ -33,7 +33,7 @@ See also the [thundering herd problem](https://en.wikipedia.org/wiki/Thundering_
 ## Set a timeout on the child command
 
 Set a timeout on the child command so that you don't get stuck if there is an infinite loop, dead
-lock, or similar issue. Set the
+lock, or similar issue.
 
 ## Avoid output predicates
 
