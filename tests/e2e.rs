@@ -283,6 +283,20 @@ fn stop_on_signal() {
     cmd.assert().code(predicate::eq(STOPPED));
 }
 
+#[test]
+fn version() {
+    let version = format!("{}\n", env!("CARGO_PKG_VERSION"));
+
+    for arg in ["--version", "-V"] {
+        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        cmd.arg(arg);
+        cmd.timeout(TEST_TIMEOUT);
+        cmd.assert()
+            .success()
+            .stdout(predicate::eq(version.as_str()));
+    }
+}
+
 pub fn unsigned_percent_error(measured: f32, expected: f32) -> f32 {
     100. * (measured - expected).abs() / expected
 }

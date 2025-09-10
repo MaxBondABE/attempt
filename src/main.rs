@@ -18,6 +18,8 @@ const RETRIES_EXHAUSTED: i32 = 3;
 const STOPPED: i32 = 4;
 // 101 is used by Rust during a panic
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 #[derive(Debug, PartialEq, Eq)]
 enum Outcome {
     Success,
@@ -39,6 +41,11 @@ fn attempt(args: AttemptArguments) -> Result<Outcome, io::Error> {
     use std::thread::sleep;
     #[cfg(test)]
     use util::mock_sleep::fake_sleep_for_attempt as sleep;
+
+    if args.version {
+        println!("{}", VERSION);
+        return Ok(Outcome::Success);
+    }
 
     if let Some(delay) = args.wait_params.stagger_delay() {
         info!("Staggering by {:.2} seconds", delay.as_secs_f32());

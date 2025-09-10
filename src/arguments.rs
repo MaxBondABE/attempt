@@ -16,7 +16,7 @@ use crate::util::{
     value_parsing::{f32_gte_0, time_duration, usize_gte_1},
 };
 
-/// Hack to get a "default" subcommand to work. See ImplicitSubcommandArguments.
+/// Hack to get a "default" subcommand to work, as well as --version. See ImplicitSubcommandArguments and VersionArguments.
 pub fn parse_arguments() -> AttemptArguments {
     // NB: Both parse_arguments functions MUST be kept in sync.
     // This is NOT protected by a test. If you change this function,
@@ -27,6 +27,8 @@ pub fn parse_arguments() -> AttemptArguments {
         Err(e) => {
             if let Ok(args) = ImplicitSubcommandArguments::try_parse() {
                 args.into()
+            } else if let Ok(args) = VersionArguments::try_parse() {
+                args.into()
             } else {
                 e.exit()
             }
@@ -35,7 +37,7 @@ pub fn parse_arguments() -> AttemptArguments {
 }
 
 #[allow(unused)] // testing utility
-/// Hack to get a "default" subcommand to work. See ImplicitSubcommandArguments.
+/// Hack to get a "default" subcommand to work, as well as --version. See ImplicitSubcommandArguments and VersionArguments.
 pub fn parse_arguments_from<I: IntoIterator<Item = T> + Copy, T: Into<OsString> + Clone>(
     itr: I,
 ) -> AttemptArguments {
@@ -47,6 +49,8 @@ pub fn parse_arguments_from<I: IntoIterator<Item = T> + Copy, T: Into<OsString> 
         Ok(args) => args,
         Err(e) => {
             if let Ok(args) = ImplicitSubcommandArguments::try_parse_from(itr) {
+                args.into()
+            } else if let Ok(args) = VersionArguments::try_parse_from(itr) {
                 args.into()
             } else {
                 e.exit()
@@ -64,6 +68,10 @@ pub struct AttemptArguments {
     pub wait_params: WaitParameters,
     #[command(flatten)]
     pub policy_params: PolicyParameters,
+
+    /// Print the version number and exit
+    #[arg(long, short = 'V', default_value_t = false)]
+    pub version: bool,
 
     /// The maximum number of attempts.
     #[arg(long, short, default_value_t = 3, global = true, value_parser=usize_gte_1)]
@@ -98,6 +106,13 @@ impl AttemptArguments {
     pub fn validate(&self) {
         // NB: clap_cmd here a command in the `clap` parlance - NOT the command we are
         // retrying.
+
+        if self.version {
+            // We don't need to uphold any invariants if --version is specified; we're just
+            // going to print the version and exit
+            return;
+        }
+
         if self.schedule.command().is_empty() {
             let mut clap_cmd = AttemptArguments::command();
             clap_cmd
@@ -196,7 +211,10 @@ pub struct ImplicitSubcommandArguments {
     #[command(flatten)]
     pub policy_params: PolicyParameters,
 
-    #[arg(long, short, default_value_t = 1.0, value_parser=f32_gte_0, hide = true)]
+    #[arg(long, short = 'V', default_value_t = false)]
+    pub version: bool,
+
+    #[arg(long, short, default_value_t = 1.0, value_parser=f32_gte_0)]
     wait: f32,
 
     #[arg(long, short, default_value_t = 3, global = true, value_parser=usize_gte_1)]
@@ -222,6 +240,7 @@ pub struct ImplicitSubcommandArguments {
 impl From<ImplicitSubcommandArguments> for AttemptArguments {
     fn from(value: ImplicitSubcommandArguments) -> Self {
         let ImplicitSubcommandArguments {
+            version,
             wait_params,
             policy_params,
             wait,
@@ -238,6 +257,7 @@ impl From<ImplicitSubcommandArguments> for AttemptArguments {
 
         Self {
             schedule,
+            version,
             wait_params,
             policy_params,
             attempts,
@@ -247,6 +267,23 @@ impl From<ImplicitSubcommandArguments> for AttemptArguments {
             quiet,
             unlimited_attempts,
             forever,
+        }
+    }
+}
+
+/// Hack to allow `--version` to be specified without any other required arguments
+#[derive(Parser, Debug)]
+pub struct VersionArguments {
+    /// Print the version number and exit
+    #[arg(long, short = 'V', default_value_t = false)]
+    pub version: bool,
+}
+impl From<VersionArguments> for AttemptArguments {
+    fn from(value: VersionArguments) -> Self {
+        let VersionArguments { version } = value;
+        Self {
+            version,
+            ..Default::default()
         }
     }
 }
