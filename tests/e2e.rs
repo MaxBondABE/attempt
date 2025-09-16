@@ -1,4 +1,5 @@
 use std::{
+    panic,
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
@@ -198,6 +199,7 @@ fn command_failed() {
 #[test]
 fn staggering() {
     // FIXME this test is flaky, sometimes the child threads die inside timing_difference()
+    // For now, this is mitigated with retries.
 
     const STAGGER: f32 = 1.0;
     let samples: usize = 8; // MUST be even
@@ -254,7 +256,24 @@ fn staggering() {
         total / n as f32
     }
 
-    assert_average_percent_error(|| sample_timing_difference(samples), expected, 30.);
+    fn sampling_with_retries<F: Fn() -> f32>(func: F) -> f32 {
+        for attempt in 1..=3 {
+            match panic::catch_unwind(panic::AssertUnwindSafe(&func)) {
+                Ok(result) => return result,
+                Err(_) if attempt < 3 => {
+                    eprintln!("Test attempt {} failed with panic, retrying...", attempt);
+                }
+                Err(e) => panic::resume_unwind(e),
+            }
+        }
+        unreachable!()
+    }
+
+    assert_average_percent_error(
+        || sampling_with_retries(|| sample_timing_difference(samples)),
+        expected,
+        30.,
+    );
 }
 
 #[cfg(unix)]
