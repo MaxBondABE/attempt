@@ -53,4 +53,10 @@ attempt exponential --retry-if-contains "server not ready" sqlx migrate
 
 # Installation
 
+Install via [Homebrew](https://brew.sh/):
+
+```sh
+$ brew install attempt-cli
+```
+
 `cargo install attempt-cli`
