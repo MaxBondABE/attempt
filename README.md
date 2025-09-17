@@ -53,10 +53,10 @@ attempt exponential --retry-if-contains "server not ready" sqlx migrate
 
 # Installation
 
-Install via [Homebrew](https://brew.sh/):
-
-```sh
-$ brew install attempt-cli
-```
+[Cargo](https://github.com/rust-lang/cargo):
 
 `cargo install attempt-cli`
+
+[Homebrew](https://brew.sh/):
+
+`brew install attempt-cli`
