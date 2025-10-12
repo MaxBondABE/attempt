@@ -178,7 +178,8 @@
                         <h1 id="timeout-control"><a class="header" href="#timeout-control">Timeout control</a></h1>
 <h2 id="specifying-durations"><a class="header" href="#specifying-durations">Specifying durations</a></h2>
 <p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
-in seconds.</p>
+in seconds. <code>300</code> would be interpreted as 300 seconds. Multiple units can be used together such as
+<code>1hr30m</code>. You may include whitespace, so <code>1hr 30m</code> is also valid.</p>
 <p>The following units are supported:</p>
 <ul>
 <li>Hours (<code>h</code> or <code>hr</code>)</li>
@@ -187,7 +188,6 @@ in seconds.</p>
 <li>Milliseconds (<code>ms</code>)</li>
 <li>Nanoseconds (<code>ns</code>)</li>
 </ul>
-<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h2 id="-t---timeout-duration"><a class="header" href="#-t---timeout-duration"><code>-t --timeout &lt;DURATION&gt;</code></a></h2>
 <p>Kill the child command if it does not complete within the timeout. This prevents <code>attempt</code> from
 waiting indefinitely on a child that may never exit. For instance, the child could be stuck in an

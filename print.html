@@ -368,7 +368,10 @@ attempt --stop-if-stderr-contains "Authentication failed" secure_command
 attempt --forever --wait 0 long_running_service
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="installation"><a class="header" href="#installation">Installation</a></h1>
+<p><a href="https://github.com/rust-lang/cargo">Cargo</a>:</p>
 <p><code>cargo install attempt-cli</code></p>
+<p><a href="https://brew.sh/">Homebrew</a>:</p>
+<p><code>brew install attempt-cli</code></p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="backoff-schedule-1"><a class="header" href="#backoff-schedule-1">Backoff schedule</a></h1>
 <p>The backoff schedule determines how long we wait between successive attempts. The simplest schedule
 is a fixed delay, where we wait the same amount of time between all attempts. But it's often a good
@@ -389,7 +392,8 @@ delay but to fall back to a long delay if the outage proves persistent.</p>
 </div>
 <h2 id="specifying-durations"><a class="header" href="#specifying-durations">Specifying durations</a></h2>
 <p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
-in DURATION.</p>
+in seconds. <code>300</code> would be interpreted as 300 seconds. Multiple units can be used together such as
+<code>1hr30m</code>. You may include whitespace, so <code>1hr 30m</code> is also valid.</p>
 <p>The following units are supported:</p>
 <ul>
 <li>Hours (<code>h</code> or <code>hr</code>)</li>
@@ -398,13 +402,12 @@ in DURATION.</p>
 <li>Milliseconds (<code>ms</code>)</li>
 <li>Nanoseconds (<code>ns</code>)</li>
 </ul>
-<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example"><a class="header" href="#example">Example</a></h1>
 <pre><code class="language-bash"># Because it is the default, specifying `fixed` is optional
 attempt /bin/false
 attempt fixed /bin/false
 
-# Change the wait time from the default of 1 second to 15 DURATION
+# Change the wait time from the default of 1 second to 15 seconds
 attempt fixed -w 15s /bin/false
 attempt fixed --wait 15s /bin/false
 </code></pre>
@@ -414,16 +417,17 @@ attempt fixed --wait 15s /bin/false
 <div style="break-before: page; page-break-before: always;"></div><h1 id="exponential-schedule"><a class="header" href="#exponential-schedule">Exponential schedule</a></h1>
 <p>Wait exponentially more time between attempts, using the following formula:</p>
 <p><code>&lt;multiplier&gt; * (&lt;base&gt; ^ &lt;attempts&gt;)</code></p>
+<p>The attempt counter starts at 0, so the first wait is is for <code>&lt;multiplier&gt;</code> seconds.</p>
 <div class="table-wrapper"><table><thead><tr><th>Attempt</th><th>Delay</th></tr></thead><tbody>
 <tr><td>0</td><td>1</td></tr>
 <tr><td>1</td><td>2</td></tr>
 <tr><td>2</td><td>4</td></tr>
 </tbody></table>
 </div>
-<p>The attempt counter starts at 0, so the first wait is is for <code>&lt;multiplier&gt;</code> seconds.</p>
 <h2 id="specifying-durations-1"><a class="header" href="#specifying-durations-1">Specifying durations</a></h2>
 <p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
-in seconds.</p>
+in seconds. <code>300</code> would be interpreted as 300 seconds. Multiple units can be used together such as
+<code>1hr30m</code>. You may include whitespace, so <code>1hr 30m</code> is also valid.</p>
 <p>The following units are supported:</p>
 <ul>
 <li>Hours (<code>h</code> or <code>hr</code>)</li>
@@ -432,7 +436,6 @@ in seconds.</p>
 <li>Milliseconds (<code>ms</code>)</li>
 <li>Nanoseconds (<code>ns</code>)</li>
 </ul>
-<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example-1"><a class="header" href="#example-1">Example</a></h1>
 <pre><code class="language-bash">attempt exponential /bin/false
 attempt exp /bin/false
@@ -462,7 +465,8 @@ between attempts.</p>
 </div>
 <h2 id="specifying-durations-2"><a class="header" href="#specifying-durations-2">Specifying durations</a></h2>
 <p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
-in DURATION.</p>
+in seconds. <code>300</code> would be interpreted as 300 seconds. Multiple units can be used together such as
+<code>1hr30m</code>. You may include whitespace, so <code>1hr 30m</code> is also valid.</p>
 <p>The following units are supported:</p>
 <ul>
 <li>Hours (<code>h</code> or <code>hr</code>)</li>
@@ -471,7 +475,6 @@ in DURATION.</p>
 <li>Milliseconds (<code>ms</code>)</li>
 <li>Nanoseconds (<code>ns</code>)</li>
 </ul>
-<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h1 id="example-2"><a class="header" href="#example-2">Example</a></h1>
 <pre><code class="language-bash">attempt linear /bin/false
 
@@ -560,9 +563,14 @@ output-based predicates).</p>
 <h3 id="--stop-if-status-status_code"><a class="header" href="#--stop-if-status-status_code"><code>--stop-if-status &lt;STATUS_CODE&gt;</code></a></h3>
 <p>Stop retrying if the child process exit code matches the given status pattern.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="output-predicates"><a class="header" href="#output-predicates">Output predicates</a></h1>
-<p>Output predicates examine the text written to stdout and stderr by the child command to determine
-whether to retry or stop. These predicates are useful when exit codes alone don't provide enough
-information about the failure condition.</p>
+<h2 id="security"><a class="header" href="#security">Security</a></h2>
+<p>If your application logs includes in it's output data from remote hosts or other untrusted sources,
+it is likely that attackers will be able to manipulate output predicates. Attackers will likely be
+able to trigger retry or stop predicates in inappropriate situations. If you are using regex
+predicates, attackers may be able to mount denial of service attacks by supplying
+<a href="https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS">pathological inputs</a>.
+Attackers may also launch denial of service attacks by causing the output to be large.</p>
+<p>Avoid using output predicates in untrusted environments.</p>
 <h2 id="performance-1"><a class="header" href="#performance-1">Performance</a></h2>
 <p>Output predicates are often more convinient than status predicates, and users are encouraged to use
 them when in circumstances when developer time is the greatest concern (such as in command lines and
@@ -638,7 +646,8 @@ the delays between attempts and the time limits for each attempt.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="wait-control"><a class="header" href="#wait-control">Wait control</a></h1>
 <h2 id="specifying-durations-3"><a class="header" href="#specifying-durations-3">Specifying durations</a></h2>
 <p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
-in seconds.</p>
+in seconds. <code>300</code> would be interpreted as 300 seconds. Multiple units can be used together such as
+<code>1hr30m</code>. You may include whitespace, so <code>1hr 30m</code> is also valid.</p>
 <p>The following units are supported:</p>
 <ul>
 <li>Hours (<code>h</code> or <code>hr</code>)</li>
@@ -647,7 +656,6 @@ in seconds.</p>
 <li>Milliseconds (<code>ms</code>)</li>
 <li>Nanoseconds (<code>ns</code>)</li>
 </ul>
-<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h2 id="-j---jitter-duration"><a class="header" href="#-j---jitter-duration"><code>-j --jitter &lt;DURATION&gt;</code></a></h2>
 <p>For a jitter value of <code>n</code>, adds a value in the interval <code>[0, n]</code> to the delay time. This is useful
 for preventing "thundering herd" issues. Jitter is always added last, so even if the delay was
@@ -663,7 +671,8 @@ multiple concurrent instances of <code>attempt</code> which start at the same ti
 <div style="break-before: page; page-break-before: always;"></div><h1 id="timeout-control"><a class="header" href="#timeout-control">Timeout control</a></h1>
 <h2 id="specifying-durations-4"><a class="header" href="#specifying-durations-4">Specifying durations</a></h2>
 <p>Durations in <code>attempt</code> can include units, such as <code>5min</code>. Durations without units are assumed to be
-in seconds.</p>
+in seconds. <code>300</code> would be interpreted as 300 seconds. Multiple units can be used together such as
+<code>1hr30m</code>. You may include whitespace, so <code>1hr 30m</code> is also valid.</p>
 <p>The following units are supported:</p>
 <ul>
 <li>Hours (<code>h</code> or <code>hr</code>)</li>
@@ -672,7 +681,6 @@ in seconds.</p>
 <li>Milliseconds (<code>ms</code>)</li>
 <li>Nanoseconds (<code>ns</code>)</li>
 </ul>
-<p>Multiple units can be used together such as <code>1hr 30m</code>.</p>
 <h2 id="-t---timeout-duration"><a class="header" href="#-t---timeout-duration"><code>-t --timeout &lt;DURATION&gt;</code></a></h2>
 <p>Kill the child command if it does not complete within the timeout. This prevents <code>attempt</code> from
 waiting indefinitely on a child that may never exit. For instance, the child could be stuck in an
