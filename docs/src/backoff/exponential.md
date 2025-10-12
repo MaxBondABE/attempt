@@ -4,13 +4,13 @@ Wait exponentially more time between attempts, using the following formula:
 
 `<multiplier> * (<base> ^ <attempts>)`
 
+The attempt counter starts at 0, so the first wait is is for `<multiplier>` seconds.
+
 | Attempt | Delay |
 | ------- | ----- |
 | 0       | 1     |
 | 1       | 2     |
 | 2       | 4     |
-
-The attempt counter starts at 0, so the first wait is is for `<multiplier>` seconds.
 
 ## Specifying durations
 
