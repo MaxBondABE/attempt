@@ -29,7 +29,7 @@ The following units are supported:
 attempt /bin/false
 attempt fixed /bin/false
 
-# Change the wait time from the default of 1 second to 15 DURATION
+# Change the wait time from the default of 1 second to 15 seconds
 attempt fixed -w 15s /bin/false
 attempt fixed --wait 15s /bin/false
 ```
