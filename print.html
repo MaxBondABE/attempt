@@ -699,6 +699,41 @@ terminate processes.</p>
 <h2 id="--stop-if-timeout-1"><a class="header" href="#--stop-if-timeout-1"><code>--stop-if-timeout</code></a></h2>
 <p>Stop the command if it was killed by a signal. This includes timeouts, since timeouts use signals to
 terminate processes.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="security-1"><a class="header" href="#security-1">Security</a></h1>
+<p><code>attempt</code> is primarily intended to be run in local development environments, where the attack
+surface is limited or nonexistant. If you are running <code>attempt</code> in a production/untrusted
+environment, you should be aware of the potential for vulnerabilities.</p>
+<h1 id="classes-of-vulnerability"><a class="header" href="#classes-of-vulnerability">Classes of vulnerability</a></h1>
+<p><code>attempt</code> is vulnerable to three primary classes of vulnerability:</p>
+<ul>
+<li>Terminating retries before an application has succeeded</li>
+<li>Retrying an application that has already succeed</li>
+<li>Denial of service attacks</li>
+</ul>
+<h1 id="potential-vulnerabilities"><a class="header" href="#potential-vulnerabilities">Potential vulnerabilities</a></h1>
+<h2 id="manipulating-output-predicates"><a class="header" href="#manipulating-output-predicates">Manipulating output predicates</a></h2>
+<p>If your application logs includes in it's output data from remote hosts or other untrusted sources,
+it is likely that attackers will be able to manipulate output predicates. Attackers will likely be
+able to trigger retry or stop predicates in inappropriate situations.</p>
+<h2 id="denial-of-service-attacks-on-output-predicates"><a class="header" href="#denial-of-service-attacks-on-output-predicates">Denial of service attacks on output predicates</a></h2>
+<p>Attackers able to influence the output of your application may mount denial of service attacks by
+causing it to include invalid UTF-8, which crashes <code>attempt</code>. They may also be able to crash
+<code>attempt</code> by making the output large.</p>
+<p>If you are using regex predicates, attackers may be able to mount denial of service attacks by
+supplying
+<a href="https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS">pathological inputs</a>.</p>
+<h2 id="sending-signals-to-child-processes"><a class="header" href="#sending-signals-to-child-processes">Sending signals to child processes</a></h2>
+<p>An attacker with access to the system <code>attempt</code> is running on could manipulate signal predicates by
+sending signals to <code>attempt</code>'s child process.</p>
+<h1 id="mitigations"><a class="header" href="#mitigations">Mitigations</a></h1>
+<h2 id="write-child-processes-to-be-idempotent"><a class="header" href="#write-child-processes-to-be-idempotent">Write child processes to be idempotent</a></h2>
+<p>Whenever possible, child processes should be written such that they tolerate being retried on a
+success.</p>
+<h2 id="avoid-output-predicates"><a class="header" href="#avoid-output-predicates">Avoid output predicates</a></h2>
+<p>Prefer the use of status predicates to output predicates. Status predicates are more difficult to
+manipulate.</p>
+<h2 id="setup-alerting-for-failed-processing"><a class="header" href="#setup-alerting-for-failed-processing">Setup alerting for failed processing</a></h2>
+<p>If you are relying on your application to run,</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="exit-codes"><a class="header" href="#exit-codes">Exit codes</a></h1>
 <p>The following exit codes are used by <code>attempt</code> to indicate whether it failed and how. Scripts should
 use these exit codes and not the log messages exposed by <code>--verbose</code>; these exit codes will remain
@@ -737,7 +772,7 @@ the exact same time). A useful metaphor is
 <h2 id="set-a-timeout-on-the-child-command"><a class="header" href="#set-a-timeout-on-the-child-command">Set a timeout on the child command</a></h2>
 <p>Set a timeout on the child command so that you don't get stuck if there is an infinite loop, dead
 lock, or similar issue.</p>
-<h2 id="avoid-output-predicates"><a class="header" href="#avoid-output-predicates">Avoid output predicates</a></h2>
+<h2 id="avoid-output-predicates-1"><a class="header" href="#avoid-output-predicates-1">Avoid output predicates</a></h2>
 <p>Output predicates can create performance issues. Try to use status predicates whenever possible.</p>
 <p>If you must use an output predicate, use the specific <code>stdout</code> or <code>stderr</code> variant. The generic
 variants are provided for convenience, but are not as performant.</p>
