@@ -25,6 +25,7 @@
 
 # Appendixes
 
+- [Security](appendix/security.md)
 - [Exit codes](appendix/exit_codes.md)
 - [Advice for scripting](appendix/scripting.md)
 - [Bibliography](appendix/biblio.md)
