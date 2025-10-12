@@ -10,7 +10,6 @@ Wait more time between attempts, using the following formula:
 | 1       | 2     |
 | 2       | 3     |
 
-
 ## Specifying durations
 
 Durations in `attempt` can include units, such as `5min`. Durations without units are assumed to be
