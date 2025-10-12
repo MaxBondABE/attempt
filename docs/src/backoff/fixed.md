@@ -11,7 +11,7 @@ Fixed delay is the default schedule. It sleeps for a constant amount of time bet
 ## Specifying durations
 
 Durations in `attempt` can include units, such as `5min`. Durations without units are assumed to be
-in DURATION.
+in seconds.
 
 The following units are supported:
 
