@@ -1,8 +1,15 @@
 # Output predicates
 
-Output predicates examine the text written to stdout and stderr by the child command to determine
-whether to retry or stop. These predicates are useful when exit codes alone don't provide enough
-information about the failure condition.
+## Security
+
+If your application logs includes in it's output data from remote hosts or other untrusted sources,
+it is likely that attackers will be able to manipulate output predicates. Attackers will likely be
+able to trigger retry or stop predicates in inappropriate situations. If you are using regex
+predicates, attackers may be able to mount denial of service attacks by supplying
+[pathological inputs](https://owasp.org/www-community/attacks/Regular_expression_Denial_of_Service_-_ReDoS).
+Attackers may also launch denial of service attacks by causing the output to be large.
+
+Avoid using output predicates in untrusted environments.
 
 ## Performance
 

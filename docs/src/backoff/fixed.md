@@ -11,7 +11,8 @@ Fixed delay is the default schedule. It sleeps for a constant amount of time bet
 ## Specifying durations
 
 Durations in `attempt` can include units, such as `5min`. Durations without units are assumed to be
-in DURATION.
+in seconds. `300` would be interpreted as 300 seconds. Multiple units can be used together such as
+`1hr30m`. You may include whitespace, so `1hr 30m` is also valid.
 
 The following units are supported:
 
@@ -21,8 +22,6 @@ The following units are supported:
 - Milliseconds (`ms`)
 - Nanoseconds (`ns`)
 
-Multiple units can be used together such as `1hr 30m`.
-
 # Example
 
 ```bash
@@ -30,7 +29,7 @@ Multiple units can be used together such as `1hr 30m`.
 attempt /bin/false
 attempt fixed /bin/false
 
-# Change the wait time from the default of 1 second to 15 DURATION
+# Change the wait time from the default of 1 second to 15 seconds
 attempt fixed -w 15s /bin/false
 attempt fixed --wait 15s /bin/false
 ```
