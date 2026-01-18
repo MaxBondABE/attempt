@@ -7,6 +7,7 @@ use std::{
 use log::debug;
 use thiserror::Error;
 
+// NB: We only support Unix systems. Ergo, we only need concern ourselves with 8 bit status codes.
 const VALID_STATUS_CODES: RangeInclusive<i32> = (u8::MIN as i32)..=(u8::MAX as i32);
 
 /// A set of codes (exit codes or signals) which can be parsed from a string.
@@ -18,6 +19,8 @@ const VALID_STATUS_CODES: RangeInclusive<i32> = (u8::MIN as i32)..=(u8::MAX as i
 /// backwards compatibility.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CodePattern {
+    // NB: Because we only support Unix, we may assume an 8-bit space, which is
+    // small enough to fit in a table.
     codes: [bool; 256],
 }
 
@@ -298,7 +301,7 @@ pub enum ParsingErrorKind {
     HeadlessRange,
     #[error("Invalid range: Range has no end.")]
     FootlessRange,
-    #[error("Invalid range: Ranges use two dots (..).")]
+    #[error("Invalid range: Ranges use two dots (eg 1..5).")]
     WrongDots,
     #[error("Invalid range: Ranges can only be between 2 numbers.")]
     BrokenRange,
