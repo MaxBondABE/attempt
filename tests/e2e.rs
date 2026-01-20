@@ -21,7 +21,7 @@ pub const TEST_TIMEOUT: Duration = Duration::from_secs(1);
 
 #[test]
 fn happy_path_smoke_test_fixed() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("--verbose");
     cmd.arg("fixed");
     cmd.arg("/bin/true");
@@ -32,7 +32,7 @@ fn happy_path_smoke_test_fixed() {
 
 #[test]
 fn happy_path_smoke_test_exp() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("exponential");
     cmd.arg("/bin/true");
 
@@ -42,7 +42,7 @@ fn happy_path_smoke_test_exp() {
 
 #[test]
 fn happy_path_smoke_test_linear() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("linear");
     cmd.arg("/bin/true");
 
@@ -59,7 +59,7 @@ fn sad_path_smoke_test_fixed() {
 
     assert_average_percent_error(
         || {
-            let mut cmd = Command::cargo_bin("attempt").unwrap();
+            let mut cmd = Command::new(cargo_bin!("attempt"));
             cmd.arg("fixed")
                 .arg("--attempts")
                 .arg(attempts.to_string())
@@ -88,7 +88,7 @@ fn sad_path_smoke_test_exp() {
 
     assert_average_percent_error(
         || {
-            let mut cmd = Command::cargo_bin("attempt").unwrap();
+            let mut cmd = Command::new(cargo_bin!("attempt"));
             cmd.arg("exponential")
                 .arg("--attempts")
                 .arg(attempts.to_string())
@@ -121,7 +121,7 @@ fn sad_path_smoke_test_linear() {
 
     assert_average_percent_error(
         || {
-            let mut cmd = Command::cargo_bin("attempt").unwrap();
+            let mut cmd = Command::new(cargo_bin!("attempt"));
             cmd.arg("linear")
                 .arg("--attempts")
                 .arg(attempts.to_string())
@@ -150,7 +150,7 @@ fn timeouts_are_respected() {
 
     assert_average_percent_error(
         || {
-            let mut cmd = Command::cargo_bin("attempt").unwrap();
+            let mut cmd = Command::new(cargo_bin!("attempt"));
             cmd.arg("--attempts")
                 .arg(attempts.to_string())
                 .arg("--timeout")
@@ -181,7 +181,7 @@ fn timeouts_are_respected() {
 
 #[test]
 fn command_not_found() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("/not/there");
 
     cmd.timeout(TEST_TIMEOUT);
@@ -190,7 +190,7 @@ fn command_not_found() {
 
 #[test]
 fn command_failed() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("--retry-if-status").arg("10");
     cmd.arg("/bin/false");
 
@@ -208,7 +208,7 @@ fn staggering() {
     let expected = STAGGER / 2.; // Expected value of a uniform distribution
 
     fn with_stagger() -> f32 {
-        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        let mut cmd = Command::new(cargo_bin!("attempt"));
         cmd.arg("--stagger").arg(STAGGER.to_string());
         cmd.arg("/bin/true");
 
@@ -220,7 +220,7 @@ fn staggering() {
     }
 
     fn without_stagger() -> f32 {
-        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        let mut cmd = Command::new(cargo_bin!("attempt"));
         cmd.arg("/bin/true");
 
         cmd.timeout(TEST_TIMEOUT);
@@ -281,7 +281,7 @@ fn staggering() {
 #[cfg(unix)]
 #[test]
 fn retry_on_signal() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("--attempts").arg("2");
     cmd.arg("--wait").arg("0.1");
     cmd.arg("--retry-if-signal").arg("9");
@@ -294,7 +294,7 @@ fn retry_on_signal() {
 #[cfg(unix)]
 #[test]
 fn stop_on_signal() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("--attempts").arg("5");
     cmd.arg("--wait").arg("0.1");
     cmd.arg("--stop-if-signal").arg("9");
@@ -309,7 +309,7 @@ fn version() {
     let version = format!("{}\n", env!("CARGO_PKG_VERSION"));
 
     for arg in ["--version", "-V"] {
-        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        let mut cmd = Command::new(cargo_bin!("attempt"));
         cmd.arg(arg);
         cmd.timeout(TEST_TIMEOUT);
         cmd.assert()
