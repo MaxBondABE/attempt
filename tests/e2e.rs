@@ -1,10 +1,12 @@
 use std::{
+    fs::{self, File},
+    io::Write,
     panic,
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 
-use assert_cmd::Command;
+use assert_cmd::{cargo_bin, Command};
 use predicates::prelude::*;
 
 // NB: Must stay in sync with src/main.rs
@@ -19,7 +21,7 @@ pub const TEST_TIMEOUT: Duration = Duration::from_secs(1);
 
 #[test]
 fn happy_path_smoke_test_fixed() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("--verbose");
     cmd.arg("fixed");
     cmd.arg("/bin/true");
@@ -30,7 +32,7 @@ fn happy_path_smoke_test_fixed() {
 
 #[test]
 fn happy_path_smoke_test_exp() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("exponential");
     cmd.arg("/bin/true");
 
@@ -40,7 +42,7 @@ fn happy_path_smoke_test_exp() {
 
 #[test]
 fn happy_path_smoke_test_linear() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("linear");
     cmd.arg("/bin/true");
 
@@ -57,7 +59,7 @@ fn sad_path_smoke_test_fixed() {
 
     assert_average_percent_error(
         || {
-            let mut cmd = Command::cargo_bin("attempt").unwrap();
+            let mut cmd = Command::new(cargo_bin!("attempt"));
             cmd.arg("fixed")
                 .arg("--attempts")
                 .arg(attempts.to_string())
@@ -86,7 +88,7 @@ fn sad_path_smoke_test_exp() {
 
     assert_average_percent_error(
         || {
-            let mut cmd = Command::cargo_bin("attempt").unwrap();
+            let mut cmd = Command::new(cargo_bin!("attempt"));
             cmd.arg("exponential")
                 .arg("--attempts")
                 .arg(attempts.to_string())
@@ -119,7 +121,7 @@ fn sad_path_smoke_test_linear() {
 
     assert_average_percent_error(
         || {
-            let mut cmd = Command::cargo_bin("attempt").unwrap();
+            let mut cmd = Command::new(cargo_bin!("attempt"));
             cmd.arg("linear")
                 .arg("--attempts")
                 .arg(attempts.to_string())
@@ -148,7 +150,7 @@ fn timeouts_are_respected() {
 
     assert_average_percent_error(
         || {
-            let mut cmd = Command::cargo_bin("attempt").unwrap();
+            let mut cmd = Command::new(cargo_bin!("attempt"));
             cmd.arg("--attempts")
                 .arg(attempts.to_string())
                 .arg("--timeout")
@@ -179,7 +181,7 @@ fn timeouts_are_respected() {
 
 #[test]
 fn command_not_found() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("/not/there");
 
     cmd.timeout(TEST_TIMEOUT);
@@ -188,7 +190,7 @@ fn command_not_found() {
 
 #[test]
 fn command_failed() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("--retry-if-status").arg("10");
     cmd.arg("/bin/false");
 
@@ -206,7 +208,7 @@ fn staggering() {
     let expected = STAGGER / 2.; // Expected value of a uniform distribution
 
     fn with_stagger() -> f32 {
-        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        let mut cmd = Command::new(cargo_bin!("attempt"));
         cmd.arg("--stagger").arg(STAGGER.to_string());
         cmd.arg("/bin/true");
 
@@ -218,7 +220,7 @@ fn staggering() {
     }
 
     fn without_stagger() -> f32 {
-        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        let mut cmd = Command::new(cargo_bin!("attempt"));
         cmd.arg("/bin/true");
 
         cmd.timeout(TEST_TIMEOUT);
@@ -279,7 +281,7 @@ fn staggering() {
 #[cfg(unix)]
 #[test]
 fn retry_on_signal() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("--attempts").arg("2");
     cmd.arg("--wait").arg("0.1");
     cmd.arg("--retry-if-signal").arg("9");
@@ -292,7 +294,7 @@ fn retry_on_signal() {
 #[cfg(unix)]
 #[test]
 fn stop_on_signal() {
-    let mut cmd = Command::cargo_bin("attempt").unwrap();
+    let mut cmd = Command::new(cargo_bin!("attempt"));
     cmd.arg("--attempts").arg("5");
     cmd.arg("--wait").arg("0.1");
     cmd.arg("--stop-if-signal").arg("9");
@@ -307,7 +309,7 @@ fn version() {
     let version = format!("{}\n", env!("CARGO_PKG_VERSION"));
 
     for arg in ["--version", "-V"] {
-        let mut cmd = Command::cargo_bin("attempt").unwrap();
+        let mut cmd = Command::new(cargo_bin!("attempt"));
         cmd.arg(arg);
         cmd.timeout(TEST_TIMEOUT);
         cmd.assert()
@@ -352,4 +354,68 @@ pub fn assert_average_percent_error<F: Fn() -> f32>(func: F, expected: f32, thre
     let measured = samples.into_iter().take(3).sum::<f32>() / 3.;
 
     assert_percent_error(measured, expected, threshold)
+}
+
+#[test]
+fn forever_runs_more_than_once() {
+    fn run_test(wait: Duration, timeout: Duration, exit: usize, stop: Option<&'static str>) {
+        let tmp = tempfile::tempdir().expect("unable to create temp dir");
+        let counter_path = tmp.path().join("counter.txt");
+
+        {
+            // Initialize counter to 0
+            let mut f = File::create_new(&counter_path).unwrap();
+            f.write_all("0".as_bytes()).unwrap();
+            f.sync_all().unwrap();
+        }
+
+        // Script that increments a counter file and exits with status 1
+        let script = format!(
+            r#"
+                count=$(cat "{0}")
+                echo $((count + 1)) > "{0}"
+                sync "{0}"
+                exit "{1}"
+                "#,
+            counter_path.display(),
+            exit
+        );
+
+        let mut cmd = Command::new(cargo_bin!("attempt"));
+        cmd.arg("--forever");
+        cmd.arg("--wait").arg(format!("{:.3}", wait.as_secs_f32()));
+        if let Some(stop_if_status) = stop {
+            cmd.arg("--stop-if-status").arg(stop_if_status);
+        }
+        cmd.arg("--").arg("/bin/sh").arg("-c").arg(&script);
+
+        cmd.timeout(timeout);
+        let _ = cmd.assert();
+
+        let counter: i32 = dbg!(fs::read_to_string(&counter_path)
+            .unwrap()
+            .trim()
+            .parse()
+            .expect("Counter file was invalid"));
+
+        assert!(
+            counter > 1,
+            "Command did not run multiple times on --forever with default behavior (ran {0} times)\
+                \n\twait: {wait:?} exit: {exit} timeout: {timeout:?}",
+            counter
+        );
+    }
+
+    // Attempt will the the command immediately, and then wait and run it again
+    // If we timeout at 2x the rate it increments, the counter will be at least 2
+    // when we attempt gets timed out.
+    let timeout = Duration::from_millis(200); // 5hz
+    let wait = Duration::from_secs_f32(timeout.as_secs_f32() / 2.); // 10hz
+
+    // --forever should run if the command succeds or fails
+    run_test(wait, timeout, 0, None);
+    run_test(wait, timeout, 1, None);
+
+    // A stop predicate should not stop --forever
+    run_test(wait, timeout, 100, Some("0..255"));
 }

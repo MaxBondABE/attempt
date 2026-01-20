@@ -293,7 +293,7 @@ pub struct WaitParameters {
     /// Inject a random delay at the start of execution
     #[arg(long, global = true, value_parser=time_duration, value_name="DURATION")]
     pub stagger: Option<f32>,
-    /// Add random jitter to the wait time, in the interval [0, n/2].
+    /// Add random jitter to the wait time, in the interval [0, n].
     #[arg(long, short, global = true, value_parser=time_duration, value_name="DURATION")]
     pub jitter: Option<f32>,
     /// The minimum amount of time to wait between attempts.
