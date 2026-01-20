@@ -1,10 +1,12 @@
 use std::{
+    fs::{self, File},
+    io::Write,
     panic,
     thread::{self, JoinHandle},
     time::{Duration, Instant},
 };
 
-use assert_cmd::Command;
+use assert_cmd::{cargo_bin, Command};
 use predicates::prelude::*;
 
 // NB: Must stay in sync with src/main.rs
@@ -352,4 +354,68 @@ pub fn assert_average_percent_error<F: Fn() -> f32>(func: F, expected: f32, thre
     let measured = samples.into_iter().take(3).sum::<f32>() / 3.;
 
     assert_percent_error(measured, expected, threshold)
+}
+
+#[test]
+fn forever_runs_more_than_once() {
+    fn run_test(wait: Duration, timeout: Duration, exit: usize, stop: Option<&'static str>) {
+        let tmp = tempfile::tempdir().expect("unable to create temp dir");
+        let counter_path = tmp.path().join("counter.txt");
+
+        {
+            // Initialize counter to 0
+            let mut f = File::create_new(&counter_path).unwrap();
+            f.write_all("0".as_bytes()).unwrap();
+            f.sync_all().unwrap();
+        }
+
+        // Script that increments a counter file and exits with status 1
+        let script = format!(
+            r#"
+                count=$(cat "{0}")
+                echo $((count + 1)) > "{0}"
+                sync "{0}"
+                exit "{1}"
+                "#,
+            counter_path.display(),
+            exit
+        );
+
+        let mut cmd = Command::new(cargo_bin!("attempt"));
+        cmd.arg("--forever");
+        cmd.arg("--wait").arg(format!("{:.3}", wait.as_secs_f32()));
+        if let Some(stop_if_status) = stop {
+            cmd.arg("--stop-if-status").arg(stop_if_status);
+        }
+        cmd.arg("--").arg("/bin/sh").arg("-c").arg(&script);
+
+        cmd.timeout(timeout);
+        let _ = cmd.assert();
+
+        let counter: i32 = dbg!(fs::read_to_string(&counter_path)
+            .unwrap()
+            .trim()
+            .parse()
+            .expect("Counter file was invalid"));
+
+        assert!(
+            counter > 1,
+            "Command did not run multiple times on --forever with default behavior (ran {0} times)\
+                \n\twait: {wait:?} exit: {exit} timeout: {timeout:?}",
+            counter
+        );
+    }
+
+    // Attempt will the the command immediately, and then wait and run it again
+    // If we timeout at 2x the rate it increments, the counter will be at least 2
+    // when we attempt gets timed out.
+    let timeout = Duration::from_millis(200); // 5hz
+    let wait = Duration::from_secs_f32(timeout.as_secs_f32() / 2.); // 10hz
+
+    // --forever should run if the command succeds or fails
+    run_test(wait, timeout, 0, None);
+    run_test(wait, timeout, 1, None);
+
+    // A stop predicate should not stop --forever
+    run_test(wait, timeout, 100, Some("0..255"));
 }

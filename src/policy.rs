@@ -135,16 +135,11 @@ impl PolicyParameters {
         false
     }
 
-    fn evaluate_retry_predicates(
-        &self,
-        output: impl OutputShim,
-        forever: bool,
-        timed_out: bool,
-    ) -> bool {
+    fn evaluate_retry_predicates(&self, output: impl OutputShim, timed_out: bool) -> bool {
         trace!("Evaluating retry predicates...");
 
-        if self.retry_always || forever {
-            debug!("Retry: Retrying by default.");
+        if self.retry_always {
+            debug!("Retry: Always retry.");
             return true;
         }
 
@@ -247,6 +242,13 @@ impl PolicyParameters {
     ) -> Result<(ControlFlow<()>, ExitStatus), io::Error> {
         trace!("Evaluating policy...");
 
+        if forever {
+            let status = child.wait()?;
+            debug!("Command exited: {}.", status);
+            debug!("Retry: Running forever.");
+            return Ok((ControlFlow::Continue(()), status));
+        }
+
         if self.default_behavior() {
             let status = child.wait()?;
             debug!("Command exited: {}.", status);
@@ -282,7 +284,6 @@ impl PolicyParameters {
                 stdout: &stdout,
                 stderr: &stderr,
             },
-            forever,
             timed_out,
         ) {
             return Ok((ControlFlow::Continue(()), output.status));
@@ -478,7 +479,7 @@ mod test {
 
         assert!(policy.evaluate_stop_predicates(PrintsFooStdout, false));
         assert!(policy.evaluate_stop_predicates(PrintsFooStderr, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false));
         assert!(!policy.evaluate_stop_predicates(Successful, false));
 
         let policy = PolicyParameters {
@@ -488,7 +489,7 @@ mod test {
 
         assert!(policy.evaluate_stop_predicates(PrintsFooStdout, false));
         assert!(!policy.evaluate_stop_predicates(PrintsFooStderr, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false));
         assert!(!policy.evaluate_stop_predicates(Successful, false));
 
         let policy = PolicyParameters {
@@ -498,7 +499,7 @@ mod test {
 
         assert!(policy.evaluate_stop_predicates(PrintsFooStderr, false));
         assert!(!policy.evaluate_stop_predicates(PrintsFooStdout, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false));
         assert!(!policy.evaluate_stop_predicates(Successful, false));
     }
 
@@ -542,8 +543,8 @@ mod test {
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(FailingStatusCode, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(FailingStatusCode, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
     }
 
     #[test]
@@ -553,8 +554,8 @@ mod test {
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(FailingStatusCode, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(FailingStatusCode, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
     }
 
     #[test]
@@ -564,8 +565,8 @@ mod test {
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(Successful, false, true));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(Successful, true));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
     }
 
     #[test]
@@ -575,26 +576,20 @@ mod test {
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(Killed, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(Killed, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
     }
 
     #[test]
-    fn retry_always_and_forever() {
+    fn retry_always() {
         let policy = PolicyParameters {
             retry_always: true,
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(FailingStatusCode, false, false));
-        assert!(policy.evaluate_retry_predicates(Killed, false, false));
-        assert!(policy.evaluate_retry_predicates(Successful, false, false));
-
-        let policy = PolicyParameters::default();
-
-        assert!(policy.evaluate_retry_predicates(FailingStatusCode, true, false));
-        assert!(policy.evaluate_retry_predicates(Killed, true, false));
-        assert!(policy.evaluate_retry_predicates(Successful, true, false));
+        assert!(policy.evaluate_retry_predicates(FailingStatusCode, false));
+        assert!(policy.evaluate_retry_predicates(Killed, false));
+        assert!(policy.evaluate_retry_predicates(Successful, false));
     }
 
     #[test]
@@ -604,30 +599,30 @@ mod test {
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(PrintsFooStdout, false, false));
-        assert!(policy.evaluate_retry_predicates(PrintsFooStderr, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(PrintsFooStdout, false));
+        assert!(policy.evaluate_retry_predicates(PrintsFooStderr, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
 
         let policy = PolicyParameters {
             retry_if_stdout_contains: Some("foo".to_string()),
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(PrintsFooStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsFooStderr, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(PrintsFooStdout, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsFooStderr, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
 
         let policy = PolicyParameters {
             retry_if_stderr_contains: Some("foo".to_string()),
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(PrintsFooStderr, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsFooStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(PrintsFooStderr, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsFooStdout, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
     }
 
     #[test]
@@ -637,30 +632,30 @@ mod test {
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(PrintsFooStdout, false, false));
-        assert!(policy.evaluate_retry_predicates(PrintsFooStderr, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(PrintsFooStdout, false));
+        assert!(policy.evaluate_retry_predicates(PrintsFooStderr, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
 
         let policy = PolicyParameters {
             retry_if_stdout_matches: Some(Regex::new("foo").unwrap()),
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(PrintsFooStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsFooStderr, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(PrintsFooStdout, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsFooStderr, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStdout, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
 
         let policy = PolicyParameters {
             retry_if_stderr_matches: Some(Regex::new("foo").unwrap()),
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(PrintsFooStderr, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsFooStdout, false, false));
-        assert!(!policy.evaluate_retry_predicates(PrintsBarStderr, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(PrintsFooStderr, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsFooStdout, false));
+        assert!(!policy.evaluate_retry_predicates(PrintsBarStderr, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
     }
 
     #[cfg(unix)]
@@ -688,9 +683,9 @@ mod test {
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(KilledBySigterm, false, false));
-        assert!(!policy.evaluate_retry_predicates(KilledBySigkill, false, false));
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(KilledBySigterm, false));
+        assert!(!policy.evaluate_retry_predicates(KilledBySigkill, false));
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
     }
 
     #[cfg(unix)]
@@ -701,26 +696,26 @@ mod test {
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(KilledBySigkill, false, false)); // Signal 9
-        assert!(!policy.evaluate_retry_predicates(KilledBySigterm, false, false)); // Signal 15
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(KilledBySigkill, false)); // Signal 9
+        assert!(!policy.evaluate_retry_predicates(KilledBySigterm, false)); // Signal 15
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
 
         let policy = PolicyParameters {
             retry_if_signal: Some(CodePattern::default().with_range(1..=20)),
             ..Default::default()
         };
 
-        assert!(policy.evaluate_retry_predicates(KilledBySigkill, false, false)); // Signal 9
-        assert!(policy.evaluate_retry_predicates(KilledBySigterm, false, false)); // Signal 15
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(policy.evaluate_retry_predicates(KilledBySigkill, false)); // Signal 9
+        assert!(policy.evaluate_retry_predicates(KilledBySigterm, false)); // Signal 15
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
 
         let policy = PolicyParameters {
             retry_if_signal: Some(CodePattern::default().with_range(20..=30)),
             ..Default::default()
         };
 
-        assert!(!policy.evaluate_retry_predicates(KilledBySigkill, false, false)); // Signal 9
-        assert!(!policy.evaluate_retry_predicates(KilledBySigterm, false, false)); // Signal 15
-        assert!(!policy.evaluate_retry_predicates(Successful, false, false));
+        assert!(!policy.evaluate_retry_predicates(KilledBySigkill, false)); // Signal 9
+        assert!(!policy.evaluate_retry_predicates(KilledBySigterm, false)); // Signal 15
+        assert!(!policy.evaluate_retry_predicates(Successful, false));
     }
 }
